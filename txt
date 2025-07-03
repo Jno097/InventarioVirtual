@@ -1,0 +1,1137 @@
+# Modificaciones para Integración con ImgBB
+
+Voy a modificar los archivos para implementar la subida de imágenes a ImgBB y almacenar el código HTML/URL que proporciona el servicio.
+
+## 1. Primero, modificamos la estructura de la base de datos
+
+```sql
+-- Modificación de la tabla inventario para cambiar el tipo de imagen
+ALTER TABLE `inventario` MODIFY `imagen` TEXT DEFAULT NULL COMMENT 'URL o código HTML de la imagen en ImgBB';
+```
+
+## 2. Modificación de agregar2.php (solo cambios necesarios)
+
+```php
+<!-- Solo necesitamos asegurarnos que el formulario tenga enctype="multipart/form-data" -->
+<!-- Esto ya está correcto en tu archivo actual -->
+<form action="agregar3.php" method="post" enctype="multipart/form-data">
+```
+
+## 3. Modificación completa de agregar3.php
+
+```php
+<?php
+include("funciones.php");
+
+// Sanitizar todas las entradas
+$nombre = sanitizar($_POST["nombre"]);
+$descrip = sanitizar($_POST["descrip"]);
+$stock = intval($_POST["stock"]);
+$lugar = intval($_POST["lugar"]);
+$categoria = sanitizar($_POST["categoria"]);
+$estado = sanitizar($_POST["estado"]);
+
+// Configuración de ImgBB - REEMPLAZA CON TU API KEY REAL
+$imgbb_api_key = "TU_API_KEY_AQUI";
+
+/**
+ * Función para subir imagen a ImgBB y obtener URL
+ */
+function subirImagenImgBB($imagen_temp, $api_key) {
+    $imagen_data = base64_encode(file_get_contents($imagen_temp));
+    
+    $postData = array(
+        'key' => $api_key,
+        'image' => $imagen_data
+    );
+    
+    $ch = curl_init();
+    curl_setopt($ch, CURLOPT_URL, 'https://api.imgbb.com/1/upload');
+    curl_setopt($ch, CURLOPT_POST, true);
+    curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+    curl_setopt($ch, CURLOPT_POSTFIELDS, $postData);
+    curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
+    
+    $response = curl_exec($ch);
+    $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+    curl_close($ch);
+    
+    if ($httpCode == 200) {
+        $result = json_decode($response, true);
+        if ($result['success']) {
+            return array(
+                'url' => $result['data']['url'],
+                'thumb_url' => $result['data']['thumb']['url'],
+                'display_url' => $result['data']['display_url'],
+                'delete_url' => $result['data']['delete_url']
+            );
+        }
+    }
+    return false;
+}
+
+// Verificar que se haya subido una imagen correctamente
+if (isset($_FILES["imagen"]) && $_FILES["imagen"]["error"] == UPLOAD_ERR_OK) {
+    $imagen_temp = $_FILES["imagen"]["tmp_name"];
+    
+    // Subir imagen a ImgBB
+    $imgbb_data = subirImagenImgBB($imagen_temp, $imgbb_api_key);
+    
+    if ($imgbb_data !== false) {
+        // Conexión a la base de datos
+        $conexion = mysqli_connect("localhost", "root", "");
+        if (!$conexion) {
+            die("Error de conexión: " . mysqli_connect_error());
+        }
+        
+        mysqli_select_db($conexion, "inventario");
+        
+        // Escapar datos para seguridad
+        $nombre = escapar($conexion, $nombre);
+        $descrip = escapar($conexion, $descrip);
+        $categoria = escapar($conexion, $categoria);
+        $estado = escapar($conexion, $estado);
+        $imagen_url = escapar($conexion, $imgbb_data['url']);
+        
+        // Insertar en la base de datos
+        $consulta = "INSERT INTO inventario (nombre, descrip, stock, id_tabla, categoria, estado, imagen) 
+                    VALUES ('$nombre', '$descrip', $stock, $lugar, '$categoria', '$estado', '$imagen_url')";
+        
+        $resultado = mysqli_query($conexion, $consulta);
+        
+        if ($resultado) {
+            echo "<script>
+                    alert('Producto agregado correctamente.\\nImagen subida exitosamente.');
+                    window.location='agregar2.php';
+                  </script>";
+        } else {
+            echo "<script>
+                    alert('Error al guardar en la base de datos: " . addslashes(mysqli_error($conexion)) . "');
+                    window.location='agregar2.php';
+                  </script>";
+        }
+        
+        mysqli_close($conexion);
+        
+    } else {
+        echo "<script>
+                alert('Error al subir la imagen a ImgBB. Verifica tu API key y conexión a internet.');
+                window.location='agregar2.php';
+              </script>";
+    }
+} else {
+    $error_msg = "Error desconocido";
+    switch ($_FILES["imagen"]["error"]) {
+        case UPLOAD_ERR_INI_SIZE:
+        case UPLOAD_ERR_FORM_SIZE:
+            $error_msg = "El archivo es demasiado grande";
+            break;
+        case UPLOAD_ERR_PARTIAL:
+            $error_msg = "La subida del archivo fue interrumpida";
+            break;
+        case UPLOAD_ERR_NO_FILE:
+            $error_msg = "No se seleccionó ningún archivo";
+            break;
+        case UPLOAD_ERR_NO_TMP_DIR:
+            $error_msg = "Falta la carpeta temporal";
+            break;
+        case UPLOAD_ERR_CANT_WRITE:
+            $error_msg = "No se pudo escribir el archivo en el disco";
+            break;
+        case UPLOAD_ERR_EXTENSION:
+            $error_msg = "Una extensión de PHP detuvo la subida del archivo";
+            break;
+    }
+    
+    echo "<script>
+            alert('Error al procesar la imagen: $error_msg');
+            window.location='agregar2.php';
+          </script>";
+}
+?>
+```
+
+## 4. Recomendaciones adicionales
+
+1. **Obtén una API key de ImgBB**:
+   - Regístrate en [ImgBB](https://imgbb.com/)
+   - Ve a la sección de API y obtén tu clave
+   - Reemplaza `"TU_API_KEY_AQUI"` con tu clave real
+
+2. **Mejoras de seguridad**:
+   - Considera almacenar la API key en una variable de entorno o archivo de configuración fuera del directorio público
+   - Valida el tipo de archivo (solo imágenes) antes de subirlo
+
+3. **Estructura de datos**:
+   - La modificación de la tabla cambia `imagen` de MEDIUMBLOB a TEXT para almacenar la URL
+   - Puedes elegir almacenar diferentes URLs de ImgBB (thumb, display, etc.)
+
+4. **Manejo de errores**:
+   - El código ahora incluye un manejo más detallado de errores de subida de archivos
+   - Proporciona mensajes más descriptivos al usuario
+
+Estos cambios permitirán que:
+- Las imágenes se suban a ImgBB en lugar de almacenarse en la base de datos
+- Se guarde la URL de la imagen en la base de datos
+- El sistema sea más escalable (no llenar la base de datos con datos binarios)
+- Las imágenes se sirvan más rápido (desde ImgBB en lugar de tu servidor)
+
+
+
+
+
+
+
+
+
+
+
+
+# Solución para Mostrar Imágenes desde ImgBB en backend.php
+
+Para hacer que las imágenes subidas a ImgBB se muestren correctamente en tu backend.php, necesitas modificar la forma en que se generan las etiquetas de imagen. Aquí están los cambios necesarios:
+
+## 1. Modificar la sección de visualización de imágenes
+
+Reemplaza la parte donde se generan las etiquetas de imagen con este código:
+
+```php
+// Verificar si la imagen es una URL de ImgBB o datos binarios
+$imagen_tag = '';
+if (filter_var($ruta_imagen, FILTER_VALIDATE_URL)) {
+    // Es una URL de ImgBB
+    $imagen_tag = "<img src='$ruta_imagen' alt='$nombre' style='max-width: 100%; height: auto;'>";
+} elseif (strpos($ruta_imagen, 'img/') !== false) {
+    // Es una ruta de archivo local
+    $imagen_tag = "<img src='$ruta_imagen' alt='$nombre' style='max-width: 100%; height: auto;'>";
+} else {
+    // Si es un dato binario (para compatibilidad con imágenes antiguas)
+    $imagen_tag = "<img src='data:image/jpeg;base64," . base64_encode($ruta_imagen) . "' alt='$nombre' style='max-width: 100%; height: auto;'>";
+}
+```
+
+## 2. Cambios completos para backend.php
+
+Aquí están las secciones específicas que necesitas modificar:
+
+### Para los productos principales (dentro del primer bucle for):
+
+```php
+// Verificar si la imagen es una URL de ImgBB o datos binarios
+$imagen_tag = '';
+if (filter_var($ruta_imagen, FILTER_VALIDATE_URL)) {
+    // Es una URL de ImgBB
+    $imagen_tag = "<img src='$ruta_imagen' alt='$nombre' style='max-width: 100%; height: auto;'>";
+} elseif (strpos($ruta_imagen, 'img/') !== false) {
+    // Es una ruta de archivo local
+    $imagen_tag = "<img src='$ruta_imagen' alt='$nombre' style='max-width: 100%; height: auto;'>";
+} else {
+    // Si es un dato binario (para compatibilidad con imágenes antiguas)
+    $imagen_tag = "<img src='data:image/jpeg;base64," . base64_encode($ruta_imagen) . "' alt='$nombre' style='max-width: 100%; height: auto;'>";
+}
+
+echo "
+<div class='item'>
+    <div class='foto'>
+        <a href='javascript:void(0)' onclick='mostrarDetalle($id)' title='Ver detalles'>
+            $imagen_tag
+        </a>
+    </div>
+    <div class='nombre'>$nombre</div>";
+```
+
+### Para los productos relacionados (dentro del while):
+
+```php
+// Verificar si la imagen es una URL de ImgBB o datos binarios
+$imagen_rel_tag = '';
+if (filter_var($ruta_imagen_rel, FILTER_VALIDATE_URL)) {
+    // Es una URL de ImgBB
+    $imagen_rel_tag = "<img src='$ruta_imagen_rel' alt='$nombre_rel' style='max-width: 100%; height: auto;'>";
+} elseif (strpos($ruta_imagen_rel, 'img/') !== false) {
+    // Es una ruta de archivo local
+    $imagen_rel_tag = "<img src='$ruta_imagen_rel' alt='$nombre_rel' style='max-width: 100%; height: auto;'>";
+} else {
+    // Si es un dato binario (para compatibilidad con imágenes antiguas)
+    $imagen_rel_tag = "<img src='data:image/jpeg;base64," . base64_encode($ruta_imagen_rel) . "' alt='$nombre_rel' style='max-width: 100%; height: auto;'>";
+}
+
+echo "<div class='mini-item'>
+    <div class='mini-foto'>$imagen_rel_tag</div>
+    <div class='mini-info'>
+        <h3>$nombre_rel</h3>
+        <p>$descrip_rel</p>
+        <p>Stock: $stock_rel</p>";
+```
+
+## 3. Añadir estilos CSS (opcional)
+
+Puedes añadir estos estilos para mejorar la visualización:
+
+```css
+.item .foto img, 
+.mini-item .mini-foto img, 
+.imagen-principal img, 
+.detalle-producto img {
+    max-width: 100%;
+    height: auto;
+    border-radius: 5px;
+    object-fit: contain;
+    background: #f5f5f5;
+    border: 1px solid #ddd;
+    padding: 5px;
+}
+
+.item .foto, 
+.mini-item .mini-foto {
+    height: 200px; /* Altura fija para uniformidad */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+    margin-bottom: 10px;
+}
+
+.mini-item .mini-foto {
+    height: 120px;
+}
+```
+
+## 4. Verificación de datos
+
+Para asegurarte que todo funciona correctamente, puedes añadir temporalmente esta línea después de obtener `$ruta_imagen`:
+
+```php
+echo "<!-- Debug imagen: " . htmlspecialchars(substr($ruta_imagen, 0, 100)) . " -->";
+```
+
+Esto te mostrará en el código fuente qué tipo de dato contiene el campo imagen (los primeros 100 caracteres).
+
+## ¿Por qué estos cambios?
+
+1. **Compatibilidad**: Maneja tres casos:
+   - URLs de ImgBB (nuevo sistema)
+   - Rutas locales (sistema antiguo)
+   - Datos binarios (sistema muy antiguo)
+
+2. **Estilos consistentes**: Aplica el mismo estilo a todas las imágenes
+
+3. **Responsive**: Las imágenes se ajustarán al tamaño de sus contenedores
+
+4. **Mantenimiento**: Fácil de modificar si cambias de servicio de imágenes
+
+Con estos cambios, las imágenes subidas a ImgBB deberían mostrarse correctamente en tu backend.php, manteniendo la compatibilidad con cualquier imagen que ya exista en tu sistema.
+
+
+
+
+
+
+
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <title>Ynventaris</title>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <style>
+        /* Estilos generales */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        body {
+            background-color: #f7f9fc;
+            color: #333;
+            line-height: 1.6;
+        }
+        
+        /* Header */
+        header {
+            background-color: #2c3e50;
+            color: white;
+            padding: 1rem 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+        
+        .logo img {
+            height: 60px;
+            transition: transform 0.3s;
+        }
+        
+        .logo img:hover {
+            transform: scale(1.05);
+        }
+        
+        nav {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+        
+        nav a {
+            color: white;
+            text-decoration: none;
+            padding: 0.5rem 1rem;
+            border-radius: 4px;
+            transition: background-color 0.3s;
+            text-transform: uppercase;
+            font-size: 0.9rem;
+        }
+        
+        nav a:hover {
+            background-color: rgba(255,255,255,0.2);
+        }
+        
+        /* Dropdown de armarios */
+        .dropdown {
+            position: relative;
+            display: inline-block;
+        }
+        
+        .dropbtn {
+            background-color: transparent;
+            color: white;
+            padding: 0.5rem 1rem;
+            border: none;
+            cursor: pointer;
+            text-transform: uppercase;
+            font-size: 0.9rem;
+        }
+        
+        .dropdown-content {
+            display: none;
+            position: absolute;
+            background-color: #f9f9f9;
+            min-width: 200px;
+            box-shadow: 0 8px 16px rgba(0,0,0,0.2);
+            z-index: 1;
+            border-radius: 4px;
+            overflow: hidden;
+        }
+        
+        .dropdown-content a {
+            color: #333;
+            padding: 0.8rem 1rem;
+            text-decoration: none;
+            display: block;
+            transition: background-color 0.3s;
+        }
+        
+        .dropdown-content a:hover {
+            background-color: #f1f1f1;
+        }
+        
+        .dropdown:hover .dropdown-content {
+            display: block;
+        }
+        
+        /* Switch de modo edición */
+        .modo-edicion-switch {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            background-color: rgba(255,255,255,0.1);
+            padding: 0.5rem 1rem;
+            border-radius: 20px;
+        }
+        
+        .edit-label {
+            color: white;
+            font-size: 0.9rem;
+        }
+        
+        .switch {
+            position: relative;
+            display: inline-block;
+            width: 46px;
+            height: 22px;
+        }
+        
+        .switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+        
+        .slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: #ccc;
+            transition: .4s;
+            border-radius: 22px;
+        }
+        
+        .slider:before {
+            position: absolute;
+            content: "";
+            height: 16px;
+            width: 16px;
+            left: 3px;
+            bottom: 3px;
+            background-color: white;
+            transition: .4s;
+            border-radius: 50%;
+        }
+        
+        input:checked + .slider {
+            background-color: #3498db;
+        }
+        
+        input:checked + .slider:before {
+            transform: translateX(24px);
+        }
+        
+        /* Contenido principal */
+        main {
+            max-width: 1200px;
+            margin: 2rem auto;
+            padding: 0 2rem;
+        }
+        
+        .titulo {
+            text-align: center;
+            margin-bottom: 1rem;
+        }
+        
+        .titulo h1 {
+            font-size: 2.2rem;
+            color: #2c3e50;
+            margin-bottom: 0.5rem;
+            padding-bottom: 0.5rem;
+            position: relative;
+        }
+        
+        .titulo h1:after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 80px;
+            height: 3px;
+            background-color: #3498db;
+        }
+        
+        .titulo p {
+            color: #555;
+            margin-bottom: 0.5rem;
+        }
+        
+        /* Botón volver */
+        .volver-container {
+            text-align: center;
+            margin-bottom: 2rem;
+        }
+        
+        .volver-btn {
+            display: inline-block;
+            padding: 0.6rem 1.5rem;
+            background-color: #3498db;
+            color: white;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: all 0.3s;
+            border: none;
+            cursor: pointer;
+        }
+        
+        .volver-btn:hover {
+            background-color: #2980b9;
+            transform: translateY(-2px);
+        }
+        
+        /* Lista de armarios */
+        .armarios-lista {
+            background-color: white;
+            padding: 1.5rem;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+            margin-bottom: 2rem;
+        }
+        
+        .armarios-lista h2 {
+            margin-bottom: 1rem;
+            color: #2c3e50;
+        }
+        
+        .armarios-lista ul {
+            list-style: none;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.8rem;
+        }
+        
+        .armarios-lista li {
+            background-color: #f5f5f5;
+            border-radius: 4px;
+            transition: all 0.3s;
+        }
+        
+        .armarios-lista li:hover {
+            background-color: #e0e0e0;
+        }
+        
+        .armarios-lista a {
+            display: block;
+            padding: 0.8rem 1.2rem;
+            color: #333;
+            text-decoration: none;
+        }
+        
+        /* Grid de productos */
+        .productos {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+            gap: 1.5rem;
+        }
+        
+        .item {
+            background-color: white;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+            transition: all 0.3s;
+        }
+        
+        .item:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        }
+        
+        .foto {
+            height: 200px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+            background-color: #f5f5f5;
+        }
+        
+        .foto img {
+            max-width: 100%;
+            max-height: 100%;
+            object-fit: contain;
+            padding: 10px;
+        }
+        
+        .nombre {
+            padding: 1rem;
+            font-weight: 600;
+            text-align: center;
+            color: #2c3e50;
+        }
+        
+        .edit-buttons {
+            display: flex;
+            justify-content: center;
+            gap: 0.8rem;
+            padding: 0 1rem 1rem 1rem;
+        }
+        
+        .edit-btn, .delete-btn {
+            padding: 0.5rem 1rem;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-weight: 500;
+            transition: all 0.3s;
+        }
+        
+        .edit-btn {
+            background-color: #3498db;
+            color: white;
+        }
+        
+        .edit-btn:hover {
+            background-color: #2980b9;
+        }
+        
+        .delete-btn {
+            background-color: #e74c3c;
+            color: white;
+        }
+        
+        .delete-btn:hover {
+            background-color: #c0392b;
+        }
+        
+        /* Detalle de producto */
+        .detalle-producto {
+            background-color: white;
+            border-radius: 8px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+            margin: 2rem 0;
+            padding: 2rem;
+            display: none;
+        }
+        
+        .cerrar-detalle {
+            text-align: right;
+            margin-bottom: 1rem;
+        }
+        
+        .cerrar-detalle button {
+            background-color: #e74c3c;
+            color: white;
+            border: none;
+            padding: 0.5rem 1rem;
+            border-radius: 4px;
+            cursor: pointer;
+            font-weight: 500;
+            transition: background-color 0.3s;
+        }
+        
+        .cerrar-detalle button:hover {
+            background-color: #c0392b;
+        }
+        
+        .producto-principal {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 2rem;
+            margin-bottom: 2rem;
+        }
+        
+        .imagen-principal {
+            flex: 1;
+            min-width: 300px;
+            background-color: #f5f5f5;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 1rem;
+        }
+        
+        .imagen-principal img {
+            max-width: 100%;
+            max-height: 400px;
+            object-fit: contain;
+        }
+        
+        .info-principal {
+            flex: 2;
+            min-width: 300px;
+        }
+        
+        .info-principal h1 {
+            margin-bottom: 1rem;
+            color: #2c3e50;
+        }
+        
+        .info-principal p {
+            margin-bottom: 0.8rem;
+        }
+        
+        .info-principal strong {
+            color: #2c3e50;
+        }
+        
+        /* Productos relacionados */
+        .productos-relacionados {
+            margin-top: 2rem;
+            padding-top: 1.5rem;
+            border-top: 1px solid #eee;
+        }
+        
+        .productos-relacionados h2 {
+            margin-bottom: 1.5rem;
+            color: #2c3e50;
+        }
+        
+        .mini-items {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 1.5rem;
+        }
+        
+        .mini-item {
+            background-color: white;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+            transition: all 0.3s;
+        }
+        
+        .mini-item:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 5px 10px rgba(0,0,0,0.1);
+        }
+        
+        .mini-foto {
+            height: 120px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background-color: #f5f5f5;
+            overflow: hidden;
+        }
+        
+        .mini-foto img {
+            max-width: 100%;
+            max-height: 100%;
+            object-fit: contain;
+            padding: 10px;
+        }
+        
+        .mini-info {
+            padding: 1rem;
+        }
+        
+        .mini-info h3 {
+            font-size: 1rem;
+            margin-bottom: 0.5rem;
+            color: #2c3e50;
+        }
+        
+        .mini-info p {
+            font-size: 0.9rem;
+            color: #555;
+            margin-bottom: 0.5rem;
+        }
+        
+        /* Modo edición */
+        .modo-edicion .item {
+            border: 2px dashed #3498db;
+        }
+        
+        /* Responsive */
+        @media (max-width: 768px) {
+            header {
+                flex-direction: column;
+                gap: 1rem;
+                padding: 1rem;
+            }
+            
+            nav {
+                flex-wrap: wrap;
+                justify-content: center;
+            }
+            
+            .productos {
+                grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            }
+            
+            .producto-principal {
+                flex-direction: column;
+            }
+            
+            .imagen-principal {
+                min-width: 100%;
+            }
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="logo">
+            <a href="backend.php" title="Inicio">
+                <img src="../img/fotos_pag/logo.png" class="flogo">
+            </a>
+        </div>
+        <nav>
+            <a href="multi_busc.php" title="Búsqueda">BUSCAR</a>
+            <div class="dropdown">
+                <button class="dropbtn">ARMARIOS &#9662;</button>
+                <div class="dropdown-content">
+                    <a href="backend.php">Todos los armarios</a>
+                    <a href="modificar/armarios/agregar_armario.php">Agregar armario</
+
+
+
+
+
+
+
+
+
+                    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            overflow: hidden;
+            backdrop-filter: blur(10px);
+        }
+        
+        .header {
+            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+        
+        .header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+            font-weight: 300;
+        }
+        
+        .header p {
+            font-size: 1.1em;
+            opacity: 0.9;
+        }
+        
+        .content {
+            padding: 40px;
+        }
+        
+        .alert {
+            padding: 15px;
+            margin-bottom: 20px;
+            border-radius: 10px;
+            font-weight: 500;
+        }
+        
+        .alert-success {
+            background: linear-gradient(135deg, #d4edda 0%, #c3e6cb 100%);
+            color: #155724;
+            border-left: 4px solid #28a745;
+        }
+        
+        .alert-danger {
+            background: linear-gradient(135deg, #f8d7da 0%, #f5c6cb 100%);
+            color: #721c24;
+            border-left: 4px solid #dc3545;
+        }
+        
+        .form-container {
+            display: grid;
+            grid-template-columns: 1fr 350px;
+            gap: 40px;
+            margin-bottom: 30px;
+        }
+        
+        .form-section {
+            background: white;
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+        }
+        
+        .form-section h3 {
+            color: #333;
+            margin-bottom: 25px;
+            font-size: 1.5em;
+            font-weight: 600;
+        }
+        
+        .form-grid {
+            display: grid;
+            gap: 20px;
+        }
+        
+        .form-group {
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .form-group label {
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #555;
+            font-size: 14px;
+        }
+        
+        .form-group input,
+        .form-group select,
+        .form-group textarea {
+            padding: 12px 15px;
+            border: 2px solid #e0e0e0;
+            border-radius: 10px;
+            font-size: 16px;
+            transition: all 0.3s ease;
+            background: white;
+        }
+        
+        .form-group input:focus,
+        .form-group select:focus,
+        .form-group textarea:focus {
+            outline: none;
+            border-color: #4facfe;
+            box-shadow: 0 0 0 3px rgba(79, 172, 254, 0.1);
+            transform: translateY(-2px);
+        }
+        
+        .form-group textarea {
+            resize: vertical;
+            min-height: 100px;
+        }
+        
+        .preview-section {
+            position: sticky;
+            top: 20px;
+            height: fit-content;
+        }
+        
+        .current-image {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        
+        .current-image img {
+            max-width: 100%;
+            height: 250px;
+            object-fit: cover;
+            border-radius: 15px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.15);
+        }
+        
+        .no-image {
+            width: 100%;
+            height: 250px;
+            background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 15px;
+            color: #6c757d;
+            font-size: 18px;
+            font-weight: 500;
+        }
+        
+        .image-info {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 10px;
+            margin-top: 15px;
+        }
+        
+        .image-info h4 {
+            color: #495057;
+            margin-bottom: 10px;
+        }
+        
+        .image-info p {
+            color: #6c757d;
+            font-size: 14px;
+            margin-bottom: 5px;
+        }
+        
+        .file-input-wrapper {
+            position: relative;
+            overflow: hidden;
+            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+            color: white;
+            padding: 12px 20px;
+            border-radius: 10px;
+            cursor: pointer;
+            text-align: center;
+            transition: all 0.3s ease;
+        }
+        
+        .file-input-wrapper:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px rgba(79, 172, 254, 0.3);
+        }
+        
+        .file-input-wrapper input[type=file] {
+            position: absolute;
+            left: -9999px;
+        }
+        
+        .btn {
+            padding: 15px 30px;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            text-decoration: none;
+            display: inline-block;
+            margin: 5px;
+            font-size: 16px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            text-align: center;
+        }
+        
+        .btn-primary {
+            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+            color: white;
+        }
+        
+        .btn-secondary {
+            background: linear-gradient(135deg, #6c757d 0%, #495057 100%);
+            color: white;
+        }
+        
+        .btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+        }
+        
+        .actions {
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+            margin-top: 30px;
+        }
+        
+        .product-stats {
+            display: flex;
+            justify-content: space-around;
+            margin-bottom: 20px;
+        }
+        
+        .stat {
+            text-align: center;
+            padding: 15px;
+            background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+            border-radius: 10px;
+            flex: 1;
+            margin: 0 5px;
+        }
+        
+        .stat-value {
+            font-size: 24px;
+            font-weight: bold;
+            color: #4facfe;
+        }
+        
+        .stat-label {
+            font-size: 12px;
+            color: #6c757d;
+            margin-top: 5px;
+        }
+        
+        @media (max-width: 768px) {
+            .form-container {
+                grid-template-columns: 1fr;
+                gap: 20px;
+            }
+            
+            .content {
+                padding: 20px;
+            }
+            
+            .header h1 {
+                font-size: 2em;
+            }
+        }
+    </style>
