@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Servidor: 127.0.0.1
--- Tiempo de generación: 03-06-2025 a las 23:04:54
+-- Tiempo de generación: 04-07-2025 a las 23:14:35
 -- Versión del servidor: 10.4.32-MariaDB
 -- Versión de PHP: 8.2.12
 
@@ -48,10 +48,13 @@ INSERT INTO `armarios` (`nombre`, `descrip`, `id_tabla`, `ubicacion`) VALUES
 --
 
 CREATE TABLE `comentario` (
-  `nombre` text NOT NULL,
-  `curso` text NOT NULL,
-  `comentario` text NOT NULL,
-  `id` int(5) NOT NULL
+  `titulo` text NOT NULL,
+  `id_com` int(5) NOT NULL,
+  `descripcion` text NOT NULL,
+  `id_tabla` int(11) NOT NULL,
+  `id` int(11) NOT NULL,
+  `fecha` text NOT NULL,
+  `leido` text NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=latin1 COLLATE=latin1_swedish_ci;
 
 -- --------------------------------------------------------
@@ -117,7 +120,9 @@ ALTER TABLE `armarios`
 -- Indices de la tabla `comentario`
 --
 ALTER TABLE `comentario`
-  ADD PRIMARY KEY (`id`);
+  ADD PRIMARY KEY (`id_com`),
+  ADD KEY `fk_comentario_armarios` (`id_tabla`),
+  ADD KEY `fk_comentario_login` (`id`);
 
 --
 -- Indices de la tabla `inventario`
@@ -145,7 +150,7 @@ ALTER TABLE `armarios`
 -- AUTO_INCREMENT de la tabla `comentario`
 --
 ALTER TABLE `comentario`
-  MODIFY `id` int(5) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
+  MODIFY `id_com` int(5) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
 
 --
 -- AUTO_INCREMENT de la tabla `inventario`
@@ -158,6 +163,17 @@ ALTER TABLE `inventario`
 --
 ALTER TABLE `login`
   MODIFY `id` int(5) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=5;
+
+--
+-- Restricciones para tablas volcadas
+--
+
+--
+-- Filtros para la tabla `comentario`
+--
+ALTER TABLE `comentario`
+  ADD CONSTRAINT `fk_comentario_armarios` FOREIGN KEY (`id_tabla`) REFERENCES `armarios` (`id_tabla`) ON DELETE CASCADE,
+  ADD CONSTRAINT `fk_comentario_login` FOREIGN KEY (`id`) REFERENCES `login` (`id`) ON DELETE CASCADE;
 COMMIT;
 
 /*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;
