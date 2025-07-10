@@ -72,7 +72,7 @@ $resultado = mysqli_query($conexion, $consulta);
     <header>
         <div class="logo">
             <a href="backend.php" title="Inicio">
-                 <img src="../img/fotos_pag/logo.png" class="flogo">
+                 <img src="../../img/fotos_pag/logo.png" class="flogo">
             </a>
         </div>
         <nav>
@@ -82,21 +82,20 @@ $resultado = mysqli_query($conexion, $consulta);
                 <div class="dropdown-content">
                     <a href="backend.php">Todos los armarios</a>
                     <?php if($es_profesor_verificado): ?>
-                        <a href="modificar/armarios/agregar_armario.php">Agregar armario</a>
+                        <a href="../armarios/agregar_armario.php">Agregar armario</a>
                     <?php endif; ?>
                     <?php
                     $consulta_nav_armarios = "SELECT * FROM armarios ORDER BY nombre";
                     $resultado_nav_armarios = mysqli_query($conexion, $consulta_nav_armarios);
                     
                     while ($armario_nav = mysqli_fetch_assoc($resultado_nav_armarios)) {
-                        echo '<a href="backend.php?armario_id=' . $armario_nav['id_tabla'] . '">' . htmlspecialchars($armario_nav['nombre']) . '</a>';
+                        echo '<a href="../../backend.php?armario_id=' . $armario_nav['id_tabla'] . '">' . htmlspecialchars($armario_nav['nombre']) . '</a>';
                     }
                     ?>
                 </div>
             </div>
             <?php if($usuario_logueado): ?>
                 <?php if($es_profesor_verificado): ?>
-                    <a href="agregar_pro.php" title="Agregar productos">AGREGAR</a>
                     <div class="modo-edicion-switch">
                         <span class="edit-label">Modo edición:</span>
                         <label class="switch">
@@ -105,10 +104,10 @@ $resultado = mysqli_query($conexion, $consulta);
                         </label>
                     </div>
                 <?php endif; ?>
-                <a href="usuarios/logout.php">CERRAR SESIÓN (<?php echo htmlspecialchars($_SESSION['nombre']); ?>)</a>
+                <a href="../../usuarios/logout.php">CERRAR SESIÓN (<?php echo htmlspecialchars($_SESSION['nombre']); ?>)</a>
             <?php else: ?>
-                <a href="usuarios/login.php">INICIAR SESIÓN</a>
-                <a href="usuarios/registro.php">REGISTRARSE</a>
+                <a href="../../usuarios/login.php">INICIAR SESIÓN</a>
+                <a href="../../usuarios/registro.php">REGISTRARSE</a>
             <?php endif; ?>
         </nav>
     </header>

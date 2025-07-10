@@ -473,3 +473,110 @@ input:checked + .slider:before {
     font-size: 0.8rem;
     color: #aaa;
 }
+
+/* Estilos para comentarios */
+.seccion-comentarios {
+    background: #f8f9fa;
+    padding: 20px;
+    border-radius: 8px;
+    margin-top: 30px;
+    border: 1px solid #dee2e6;
+}
+
+.seccion-comentarios h2 {
+    margin-top: 0;
+    color: #333;
+}
+
+.form-group input,
+.form-group textarea {
+    width: 100%;
+    padding: 10px;
+    margin-bottom: 15px;
+    border: 1px solid #ced4da;
+    border-radius: 4px;
+}
+
+.form-group textarea {
+    min-height: 100px;
+}
+
+.btn-enviar {
+    background: #28a745;
+    color: white;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 4px;
+    cursor: pointer;
+}
+
+.btn-enviar:hover {
+    background: #218838;
+}
+
+.info-login {
+    text-align: center;
+    margin: 20px 0;
+}
+
+/* Estilos para ver_comentarios.php */
+.lista-completa {
+    margin-top: 20px;
+}
+
+.comentario-detallado {
+    background: white;
+    border: 1px solid #dee2e6;
+    border-radius: 8px;
+    padding: 20px;
+    margin-bottom: 20px;
+    position: relative;
+}
+
+.comentario-cabecera {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 10px;
+}
+
+.comentario-cabecera h2 {
+    margin: 0;
+    color: #007bff;
+}
+
+.fecha {
+    color: #6c757d;
+    font-size: 0.9em;
+}
+
+.usuario, .armario {
+    color: #495057;
+    margin: 5px 0;
+    font-size: 0.9em;
+}
+
+.comentario-contenido {
+    margin-top: 15px;
+    padding-top: 15px;
+    border-top: 1px solid #eee;
+}
+
+.form-eliminar {
+    position: absolute;
+    top: 20px;
+    right: 20px;
+}
+
+.form-eliminar button {
+    background: #dc3545;
+    color: white;
+    border: none;
+    padding: 5px 10px;
+    border-radius: 4px;
+    cursor: pointer;
+}
+
+.form-eliminar button:hover {
+    background: #c82333;
+}

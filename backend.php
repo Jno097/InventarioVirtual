@@ -66,7 +66,7 @@ if ($armario_id) {
             </a>
         </div>
         <nav>
-            <a href="buscar.php" title="Búsqueda">BUSCAR</a>
+            <a href="modificar/productos/buscar.php" title="Búsqueda">BUSCAR</a>
             <div class="dropdown">
                 <button class="dropbtn">ARMARIOS &#9662;</button>
                 <div class="dropdown-content">
@@ -83,7 +83,6 @@ if ($armario_id) {
             </div>
             <?php if($usuario_logueado): ?>
                 <?php if($_SESSION['cate'] == 'profe' && $_SESSION['verificado'] == 2): ?>
-                    <a href="agregar_pro.php" title="Agregar productos">AGREGAR</a>
                     <div class="modo-edicion-switch">
                         <span class="edit-label">Modo edición:</span>
                         <label class="switch">
@@ -312,6 +311,24 @@ if ($armario_id) {
             }
             ?>
         </div> 
+        <!-- Agrega esto donde quieras mostrar el formulario de comentarios -->
+<?php if (isset($armario_id) && $usuario_logueado): ?>
+    <div class="seccion-comentarios">
+        <h2>Dejar un comentario</h2>
+        <form action="comentarios/guardar_comentario.php" method="post">
+            <input type="hidden" name="armario_id" value="<?php echo $armario_id; ?>">
+            <div class="form-group">
+                <input type="text" name="titulo" placeholder="Título del comentario" required>
+            </div>
+            <div class="form-group">
+                <textarea name="descripcion" placeholder="Escribe tu comentario aquí..." required></textarea>
+            </div>
+            <button type="submit" class="btn-enviar">Enviar Comentario</button>
+        </form>
+    </div>
+<?php elseif (isset($armario_id)): ?>
+    <p class="info-login"><a href="usuarios/login.php">Inicia sesión</a> para dejar un comentario.</p>
+<?php endif; ?>
     </main>
 
     <script>
