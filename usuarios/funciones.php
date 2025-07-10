@@ -1,335 +1,129 @@
 <?php
+// Evitar múltiples inclusiones
+if (defined('FUNCIONES_CARGADAS')) {
+    return;
+}
+define('FUNCIONES_CARGADAS', true);
 
-function baseDatos($consulta)
-{
-    // Conexión
-    $conexion = mysqli_connect("localhost", "root", "");
-    // Selección de BD
-    mysqli_select_db($conexion, "inventario");
+// Configuración
+ini_set('display_errors', 1);
+ini_set('display_startup_errors', 1);
+error_reporting(E_ALL);
+
+// Definir constantes solo si no existen
+if (!defined('ENCRYPTION_KEY')) {
+    define('ENCRYPTION_KEY', 'tu_clave_secreta_123!@#ABC');
+}
+
+if (!defined('ENCRYPTION_METHOD')) {
+    define('ENCRYPTION_METHOD', 'AES-256-CBC');
+}
+
+// Función de conexión a base de datos
+function baseDatos($consulta, $params = []) {
+    $conexion = mysqli_connect("localhost", "root", "", "inventario");
+    if (!$conexion) {
+        die("Error de conexión: " . mysqli_connect_error());
+    }
     
-    // Ejecutar consulta
-    $resultado = mysqli_query($conexion, $consulta);
+    mysqli_set_charset($conexion, "utf8mb4");
     
-    // Cerrar conexión
+    if (empty($params)) {
+        $resultado = mysqli_query($conexion, $consulta);
+        if (!$resultado) {
+            $error = mysqli_error($conexion);
+            mysqli_close($conexion);
+            die("Error en la consulta: " . $error);
+        }
+        mysqli_close($conexion);
+        return $resultado;
+    }
+    
+    $stmt = mysqli_prepare($conexion, $consulta);
+    if (!$stmt) {
+        $error = mysqli_error($conexion);
+        mysqli_close($conexion);
+        die("Error en la preparación: " . $error);
+    }
+    
+    $types = str_repeat('s', count($params));
+    mysqli_stmt_bind_param($stmt, $types, ...$params);
+    
+    if (!mysqli_stmt_execute($stmt)) {
+        $error = mysqli_stmt_error($stmt);
+        mysqli_stmt_close($stmt);
+        mysqli_close($conexion);
+        die("Error en la ejecución: " . $error);
+    }
+    
+    $resultado = mysqli_stmt_get_result($stmt);
+    mysqli_stmt_close($stmt);
     mysqli_close($conexion);
     
-    // Devolver resultado
     return $resultado;
 }
 
-// Función para sanitizar entradas (ayuda a prevenir ataques XSS)
-function sanitizar($input) {
-    if (is_array($input)) {
-        foreach ($input as $key => $value) {
-            $input[$key] = sanitizar($value);
-        }
-    } else {
-        $input = htmlspecialchars(trim($input), ENT_QUOTES, 'UTF-8');
-    }
-    return $input;
-}
-
-// Función para evitar inyección SQL básica
-function escapar($conexion, $input) {
-    $conexion = mysqli_connect("localhost", "root", "");
-    mysqli_select_db($conexion, "inventario");
+// Función de encriptación
+function encriptar($data) {
+    if (empty($data)) return $data;
     
-    if (is_array($input)) {
-        foreach ($input as $key => $value) {
-            $input[$key] = escapar($conexion, $value);
-        }
-    } else {
-        $input = mysqli_real_escape_string($conexion, $input);
+    $iv_length = openssl_cipher_iv_length(ENCRYPTION_METHOD);
+    $iv = openssl_random_pseudo_bytes($iv_length);
+    
+    $encrypted = openssl_encrypt(
+        $data,
+        ENCRYPTION_METHOD,
+        ENCRYPTION_KEY,
+        0,
+        $iv
+    );
+    
+    if ($encrypted === false) {
+        throw new Exception("Error al encriptar los datos");
     }
     
-    mysqli_close($conexion);
-    return $input;
+    return base64_encode($encrypted . '::' . $iv);
+}
+
+// Función de desencriptación
+function desencriptar($data) {
+    if (empty($data)) return $data;
+    
+    $parts = explode('::', base64_decode($data), 2);
+    if (count($parts) != 2) {
+        throw new Exception("Formato de datos encriptados inválido");
+    }
+    
+    list($encrypted_data, $iv) = $parts;
+    
+    $decrypted = openssl_decrypt(
+        $encrypted_data,
+        ENCRYPTION_METHOD,
+        ENCRYPTION_KEY,
+        0,
+        $iv
+    );
+    
+    if ($decrypted === false) {
+        throw new Exception("Error al desencriptar los datos");
+    }
+    
+    return $decrypted;
+}
+
+// Funciones de verificación
+function verificarSesion() {
+    if (!isset($_SESSION['user_id'])) {
+        header("Location: login.php");
+        exit();
+    }
+}
+
+function verificarAdmin() {
+    verificarSesion();
+    if ($_SESSION['user_role'] != 'admin') {
+        header("Location: backend.php");
+        exit();
+    }
 }
 ?>
-
-<!--
-
-function buscarmar()
-{
-	$nombre = $_POST["nombre"];
-	$consulta = "select * from productos where nombre LIKE '$nombre%' order by nombre";
-	$resultado = baseDatos($consulta);
-	$n = mysqli_num_rows($resultado);
-	if ($n >= 1) {
-		for ($i = 0; $i < $n; $i++) {
-			mysqli_data_seek($resultado, $i);
-			$fila = mysqli_fetch_array($resultado);
-			$nombre = $_POST["nombre"];
-			$descrip = $_POST["descrip"];
-			$stock = $_POST["stock"];
-			$lugar = $_POST["lugar"];
-			$categoria = $_POST["categoria"];
-			$imagen = $_POST["imagen"];
-			$estado = $_POST["estado"];
-			$imagen = $_FILES["imagen"]["name"];
-			echo "
-										<div class='producto_amp'>
-											<div class='foto_amp'>
-												<a href='img/grandes/$imagen' title='Ampliar' target='blank'>
-													<img src='img/grandes/$imagen' alt='foto'>
-												</a>
-											</div>
-											<div class='texto_amp'>
-												
-												<p>Nombre: $nombre</p>
-												<p>Desc.: $descrip</p>
-												<p>Stock: $stock</p>
-												<p>Lugar: $lugar</p>
-												<p>Categoria: $categoria</p>
-												<p><a href='multi_busc.php' title='borrar'>
-												Borrar
-												</a></p>
-											</div>
-										</div>
-									";
-		}
-	} else {
-		echo "
-									<div class='producto_amp'>
-										<div class='foto_amp'>
-											<img src='img/triste.webp' alt='foto'>
-										</div>
-										<div class='texto_amp'>
-											
-											<p>Error 404</p>
-											<p>No se encontró lo que buscaba</p>
-											<p><a href='multi_busc.php' title='borrar'>
-												Borrar
-												</a></p>
-										</div>
-									</div>
-								";
-	}
-}
-?>
--->
-
-
-<!--
-function buscarcod(){
-						$codigo=$_POST["codigo"];
-						$consulta="select * from productos where codigo=$codigo";
-						$resultado=baseDatos($consulta);
-						$n=mysqli_num_rows($resultado);
-						if($n==1)
-						{	
-							mysqli_data_seek($resultado, 0);
-							$fila=mysqli_fetch_array($resultado);
-							$codigo=$fila["codigo"];
-							$descrip=$fila["descrip"];
-							$stock=$fila["stock"];
-							$precio=$fila["precio"];
-							$foto=$fila["foto"];						
-							echo"
-									<div class='producto_amp'>
-										<div class='foto_amp'>
-											<a href='img/grandes/$foto' title='Ampliar' target='blank'>
-												<img src='img/grandes/$foto' alt='foto'>
-											</a>
-										</div>
-										<div class='texto_amp'>
-											
-											<p>Desc.: $descrip</p>
-											<p>Stock: $stock</p>
-											<p>Precio.: $$precio</p>
-											<p>Cod.: $codigo</p>
-											<p><a href='multi_busc.php' title='borrar'>
-												Borrar
-												</a></p>
-										</div>
-									</div>
-								";
-						}
-						else
-						{
-							echo"
-									<div class='producto_amp'>
-										<div class='foto_amp'>
-											<img src='img/triste.webp' alt='foto'>
-										</div>
-										<div class='texto_amp'>
-											
-											<p>Error 404</p>
-											<p>Su producto no se encontró</p>
-											<p><a href='multi_busc.php' title='borrar'>
-												Borrar
-												</a></p>
-										</div>
-									</div>
-								";
-						}
-}
-function buscardes(){
-						$descrip=$_POST["descrip"];
-						$consulta="select * from productos where descrip like'$descrip%' order by descrip";
-						$resultado=baseDatos($consulta);
-						$n=mysqli_num_rows($resultado);
-						if($n>=1)
-						{	
-							for($i=0;$i<$n;$i++)
-							{
-								mysqli_data_seek($resultado, $i);
-								$fila=mysqli_fetch_array($resultado);
-								$codigo=$fila["codigo"];
-								$descrip=$fila["descrip"];
-								$stock=$fila["stock"];
-								$precio=$fila["precio"];
-								$foto=$fila["foto"];						
-								echo"
-										<div class='producto_amp'>
-											<div class='foto_amp'>
-												<a href='img/grandes/$foto' title='Ampliar' target='blank'>
-													<img src='img/grandes/$foto' alt='foto'>
-												</a>
-											</div>
-											<div class='texto_amp'>
-												
-												<p>Desc.: $descrip</p>
-												<p>Stock: $stock</p>
-												<p>Precio.: $$precio</p>
-												<p>Cod.: $codigo</p>
-												<p><a href='multi_busc.php' title='borrar'>
-												Borrar
-												</a></p>
-											</div>
-										</div>
-									";
-							}
-						}
-						else
-						{
-							echo"
-									<div class='producto_amp'>
-										<div class='foto_amp'>
-											<img src='img/triste.webp' alt='foto'>
-										</div>
-										<div class='texto_amp'>
-											
-											<p>Error 404</p>
-											<p>Su producto no se encontró</p>
-											<p><a href='multi_busc.php' title='borrar'>
-												Borrar
-												</a></p>
-										</div>
-									</div>
-								";
-						}
-}
-function buscarmar(){
-						$marca=$_POST["marca"];
-						$consulta="select * from productos where marca='$marca' order by descrip";
-						$resultado=baseDatos($consulta);
-						$n=mysqli_num_rows($resultado);
-						if($n>=1)
-						{	
-							for($i=0;$i<$n;$i++)
-							{
-								mysqli_data_seek($resultado, $i);
-								$fila=mysqli_fetch_array($resultado);
-								$codigo=$fila["codigo"];
-								$descrip=$fila["descrip"];
-								$stock=$fila["stock"];
-								$precio=$fila["precio"];
-								$foto=$fila["foto"];						
-								echo"
-										<div class='producto_amp'>
-											<div class='foto_amp'>
-												<a href='img/grandes/$foto' title='Ampliar' target='blank'>
-													<img src='img/grandes/$foto' alt='foto'>
-												</a>
-											</div>
-											<div class='texto_amp'>
-												
-												<p>Desc.: $descrip</p>
-												<p>Stock: $stock</p>
-												<p>Precio.: $$precio</p>
-												<p>Cod.: $codigo</p>
-												<p><a href='multi_busc.php' title='borrar'>
-												Borrar
-												</a></p>
-											</div>
-										</div>
-									";
-							}
-						}
-						else
-						{
-							echo"
-									<div class='producto_amp'>
-										<div class='foto_amp'>
-											<img src='img/triste.webp' alt='foto'>
-										</div>
-										<div class='texto_amp'>
-											
-											<p>Error 404</p>
-											<p>Su producto no se encontró</p>
-											<p><a href='multi_busc.php' title='borrar'>
-												Borrar
-												</a></p>
-										</div>
-									</div>
-								";
-						}
-}
-function buscarpre(){
-						$preciomin=$_POST["preciomin"];
-						$preciomax=$_POST["preciomax"];
-						$consulta="select * from productos where precio>='$preciomin' && precio<='$preciomax' order by descrip";
-						$resultado=baseDatos($consulta);
-						$n=mysqli_num_rows($resultado);
-						if($n>=1)
-						{	
-							for($i=0;$i<$n;$i++)
-							{
-								mysqli_data_seek($resultado, $i);
-								$fila=mysqli_fetch_array($resultado);
-								$codigo=$fila["codigo"];
-								$descrip=$fila["descrip"];
-								$stock=$fila["stock"];
-								$precio=$fila["precio"];
-								$foto=$fila["foto"];						
-								echo"
-										<div class='producto_amp'>
-											<div class='foto_amp'>
-												<a href='img/grandes/$foto' title='Ampliar' target='blank'>
-													<img src='img/grandes/$foto' alt='foto'>
-												</a>
-											</div>
-											<div class='texto_amp'>
-												
-												<p>Desc.: $descrip</p>
-												<p>Stock: $stock</p>
-												<p>Precio.: $$precio</p>
-												<p>Cod.: $codigo</p>
-												<p><a href='multi_busc.php' title='borrar'>
-												Borrar
-												</a></p>
-											</div>
-										</div>
-									";
-							}
-						}
-						else
-						{
-							echo"
-									<div class='producto_amp'>
-										<div class='foto_amp'>
-											<img src='img/triste.webp' alt='foto'>
-										</div>
-										<div class='texto_amp'>
-											
-											<p>Error 404</p>
-											<p>Su producto no se encontró</p>
-											<p><a href='multi_busc.php' title='borrar'>
-												Borrar
-												</a></p>
-										</div>
-									</div>
-								";
-						}
-}-->

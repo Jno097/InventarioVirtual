@@ -1,157 +1,155 @@
 <?php
+// Asegurar que la ruta es correcta
+$ruta_funciones = __DIR__ . '/funciones.php';
+if (!file_exists($ruta_funciones)) {
+    die("Error: No se encontró el archivo funciones.php en: " . $ruta_funciones);
+}
+
+require_once $ruta_funciones;
+
 session_start();
-include("funciones.php");
 
-// Procesar login si se envió el formulario
-if(isset($_POST['boton'])) {
-    // Sanitizar entradas
-    $mail = sanitizar($_POST["mail"]);
-    $contraseña = $_POST["contraseña"];
+$error_message = "";
 
-    // Validar el mail
-    if(!filter_var($mail, FILTER_VALIDATE_EMAIL)){
-        $error_message = "El formato del correo electrónico no es válido";
-    } else {
-        // Escapar para prevenir SQL injection
-        $conexion = mysqli_connect("localhost", "root", "");
-        mysqli_select_db($conexion, "inventario");
-        $mail = mysqli_real_escape_string($conexion, $mail);
-        $contraseña = mysqli_real_escape_string($conexion, $contraseña);
-
-        // Consultar la base de datos tabla login
-        $consulta = "SELECT * FROM login WHERE mail = '$mail' LIMIT 1";
-        $resultado = baseDatos($consulta);
-
-        if(mysqli_num_rows($resultado) > 0) {
-            $usuario = mysqli_fetch_assoc($resultado);
-            
-            // Verificar contraseña
-            if($usuario['contraseña'] === $contraseña) {
-                // Login exitoso - asignar datos básicos de sesión
-                $_SESSION['id_usuario'] = $usuario['id'];
-                $_SESSION['nombre'] = $usuario['nombre'];
-                $_SESSION['mail'] = $usuario['mail'];
-                $_SESSION['verificado'] = $usuario['verificado'];
-                
-                // Verificar tipo de usuario basado en la categoría
-                if ($usuario['cate'] === 'admin' || $usuario['cate'] == 1) {
-                    // Administrador (puede ser 'admin' como string o 1 como número)
-                    $_SESSION['cate'] = 'admin';
-                    $success_message = "Bienvenido administrador " . $usuario['nombre'];
-                    $redirect_url = "admin.php";
-                } else if ($usuario['cate'] === 'profe' || $usuario['cate'] == 1) {
-                    // Profesor
-                    if ($usuario['verificado'] == 0) {
-                        // Profesor pendiente de verificación
-                        $error_message = "Su cuenta de profesor está pendiente de verificación";
-                        session_destroy(); // No permitir inicio de sesión hasta verificación
-                    } else {
-                        // Profesor verificado
-                        $_SESSION['cate'] = 'profe';
-                        $success_message = "Bienvenido profesor " . $usuario['nombre'];
-                        $redirect_url = "../modificar/inventario.php";
-                    }
-                } else if ($usuario['cate'] === 'estu' || $usuario['cate'] == 2) {
-                    // Estudiante
-                    $_SESSION['cate'] = 'estu';
-                    if(isset($usuario['curso']) && !empty($usuario['curso'])) {
-                        $_SESSION['curso'] = $usuario['curso'];
-                    }
-                    $success_message = "Bienvenido estudiante " . $usuario['nombre'];
-                    $redirect_url = "../backend.php";
-                } else {
-                    // Usuario normal o cualquier otro tipo
-                    $_SESSION['cate'] = 'user';
-                    $success_message = "Bienvenido " . $usuario['nombre'];
-                    $redirect_url = "../backend.php";
-                }
-                
-                if(isset($success_message) && isset($redirect_url)) {
-                    echo "<script>alert('$success_message'); window.location='$redirect_url';</script>";
-                    exit;
-                }
-            } else {
-                $error_message = "Contraseña incorrecta";
-            }
-        } else {
-            $error_message = "El usuario no existe";
+if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['boton'])) {
+    try {
+        // Verificar que la función encriptar existe
+        if (!function_exists('encriptar')) {
+            throw new Exception("Error: La función de encriptación no está disponible");
         }
 
-        mysqli_close($conexion);
+        $email = sanitizar($_POST['mail'] ?? '');
+        $password = $_POST['contraseña'] ?? '';
+        
+        if (empty($email) || empty($password)) {
+            throw new Exception("Email y contraseña son requeridos");
+        }
+        
+        if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
+            throw new Exception("Formato de email inválido");
+        }
+        
+        // Encriptar el email
+        $email_encrypted = encriptar($email);
+        
+        // Consulta a la base de datos
+        $query = "SELECT * FROM login WHERE mail = ?";
+        $result = baseDatos($query, [$email_encrypted]);
+        
+        if ($result && mysqli_num_rows($result) == 1) {
+            $user = mysqli_fetch_assoc($result);
+            
+            if (password_verify($password, $user['contraseña'])) {
+                $_SESSION['user_id'] = $user['id'];
+                $_SESSION['user_name'] = desencriptar($user['nombre']);
+                $_SESSION['user_email'] = $email;
+                $_SESSION['user_role'] = $user['cate'];
+                $_SESSION['user_verified'] = $user['verificado'];
+                
+                // Redirección
+                if ($_SESSION['user_role'] == 'admin') {
+                    header("Location: admin.php");
+                    exit();
+                } elseif ($_SESSION['user_verified'] == 1) {
+                    header("Location: backend.php");
+                    exit();
+                } else {
+                    session_destroy();
+                    throw new Exception("Tu cuenta requiere verificación");
+                }
+            } else {
+                throw new Exception("Contraseña incorrecta");
+            }
+        } else {
+            throw new Exception("Usuario no encontrado");
+        }
+    } catch (Exception $e) {
+        $error_message = $e->getMessage();
     }
 }
 ?>
+<!-- Resto del HTML permanece igual -->
 <!DOCTYPE html>
 <html lang="es">
 <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Ynventaris - Iniciar Sesión</title>
-    <meta charset="utf-8">
-    <link rel="stylesheet" type="text/css" href="../estilos.css">
+    <link rel="stylesheet" href="../estilos.css">
     <style>
+        .login-container {
+            max-width: 400px;
+            margin: 50px auto;
+            padding: 20px;
+            background: #fff;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+        }
         .error-message {
-            background-color: #f8d7da;
-            color: #721c24;
+            color: #dc3545;
             padding: 10px;
-            margin-bottom: 20px;
+            margin-bottom: 15px;
+            background: #f8d7da;
             border: 1px solid #f5c6cb;
-            border-radius: 5px;
+            border-radius: 4px;
         }
         .form-group {
-            margin: 15px 0;
+            margin-bottom: 15px;
+        }
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+        .form-group input {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+        button[type="submit"] {
+            background: #3498db;
+            color: white;
+            border: none;
+            padding: 10px 15px;
+            border-radius: 4px;
+            cursor: pointer;
+            width: 100%;
+        }
+        button[type="submit"]:hover {
+            background: #2980b9;
+        }
+        .register-link {
+            text-align: center;
+            margin-top: 15px;
         }
     </style>
 </head>
 <body>
-    <header>
-        <div class="logo">
-            <a href="../backend.php" title="Volver">
-                <img src="../img/fotos_pag/logo.png" class="flogo">
-            </a>
-        </div>
-        <nav>
-            <a href="multi_busc.php" title="Búsqueda">BUSCAR</a>
-            <a href="registro.php" title="Registrarse">REGISTRARSE</a>
-        </nav>
-    </header>
-    <main>
-        <div class="titulo">
-            <h1>Iniciar Sesión</h1>
-        </div>
+    <div class="login-container">
+        <h1>Iniciar Sesión</h1>
         
-        <?php if(isset($error_message)): ?>
-        <div class="error-message">
-            <strong>Error:</strong> <?php echo htmlspecialchars($error_message); ?>
-        </div>
+        <?php if (!empty($error_message)): ?>
+            <div class="error-message"><?php echo htmlspecialchars($error_message); ?></div>
         <?php endif; ?>
         
-        <div class="formulario">
-            <form method="post">
-                <div class="form-group">
-                    <p>Email:
-                        <input type="email" name="mail" required 
-                               value="<?php echo isset($_POST['mail']) ? htmlspecialchars($_POST['mail']) : ''; ?>">
-                    </p>
-                </div>
-                <div class="form-group">
-                    <p>Contraseña:
-                        <input type="password" name="contraseña" required>
-                    </p>
-                </div>
-                <div class="form-group">
-                    <button type="submit" name="boton">Iniciar Sesión</button>
-                </div>
-                <p>
-                    ¿No tienes cuenta? <a href="registro.php">Regístrate aquí</a>
-                </p>
-            </form>
-        </div>
-    </main>
-    <footer>
-        <div class="logo-footer">
-            <a href="../backend.php" title="Volver">
-                <img src="../img/fotos_pag/logo.png" class="flogo">
-            </a>
-        </div>
-    </footer>
+        <form method="POST" action="login.php">
+            <div class="form-group">
+                <label for="mail">Email:</label>
+                <input type="email" id="mail" name="mail" required>
+            </div>
+            
+            <div class="form-group">
+                <label for="contraseña">Contraseña:</label>
+                <input type="password" id="contraseña" name="contraseña" required>
+            </div>
+            
+            <button type="submit" name="boton">Ingresar</button>
+            
+            <div class="register-link">
+                ¿No tienes cuenta? <a href="registro.php">Regístrate aquí</a>
+            </div>
+        </form>
+    </div>
 </body>
 </html>
