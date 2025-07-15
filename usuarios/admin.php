@@ -329,7 +329,7 @@ $todos_usuarios = baseDatos($consulta_usuarios);
 <div class="section">
     <h2>Navegación</h2>
     <a href="../backend.php" class="btn btn-primary">Volver al Inicio</a>
-    <a href="../modificar/inventario.php" class="btn btn-primary">Gestionar Inventario</a>
+    <a href="../modificar/productos/inventario.php" class="btn btn-primary">Gestionar Inventario</a>
     <a href="../modificar/armarios/gestion_armario.php" class="btn btn-primary">Gestionar Armarios</a>
 </div>
     </div>
