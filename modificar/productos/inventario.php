@@ -178,17 +178,7 @@ if($_SERVER['REQUEST_METHOD'] == 'POST') {
         $consulta = "DELETE FROM inventario WHERE id = $id";
         $resultado = baseDatos($consulta);
         
-       /* if($resultado) {
-            // Eliminar la imagen del servidor si existe
-            if($fila_imagen && file_exists($fila_imagen['imagen'])) {
-                unlink($fila_imagen['imagen']);
-            }
-            header("Location: inventario.php?success=deleted");
-            exit;
-        } else {
-            header("Location: inventario.php?error=delete_failed");
-            exit;
-        }*/
+     
     }
 }
 
@@ -357,8 +347,7 @@ if(isset($_GET['editar'])) {
     <h1>Gestión de Inventario</h1>
     <div>
         <a href="../armarios/gestion_armarios.php" class="btn btn-success">Gestionar Armarios</a>
-        <a href="../backend.php" class="btn btn-secondary">Volver al inicio</a>
-        <a href="../usuarios/admin.php" class="btn btn-secondary">Administrar Usuarios</a>
+
     </div>
 </div>
 

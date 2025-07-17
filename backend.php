@@ -311,17 +311,30 @@ if ($armario_id) {
             }
             ?>
         </div> 
-        <!-- Agrega esto donde quieras mostrar el formulario de comentarios -->
 <?php if (isset($armario_id) && $usuario_logueado): ?>
     <div class="seccion-comentarios">
         <h2>Dejar un comentario</h2>
+        
+        <?php if (isset($_GET['comentario'])): ?>
+            <?php if ($_GET['comentario'] == 'exito'): ?>
+                <div class="mensaje-exito">Comentario enviado correctamente.</div>
+            <?php else: ?>
+                <div class="mensaje-error">
+                    Error al enviar el comentario.
+                    <?php if (isset($_GET['razon'])): ?>
+                        <br>Razón: <?php echo htmlspecialchars($_GET['razon']); ?>
+                    <?php endif; ?>
+                </div>
+            <?php endif; ?>
+        <?php endif; ?>
+        
         <form action="comentarios/guardar_comentario.php" method="post">
             <input type="hidden" name="armario_id" value="<?php echo $armario_id; ?>">
             <div class="form-group">
-                <input type="text" name="titulo" placeholder="Título del comentario" required>
+                <input type="text" name="titulo" placeholder="Título del comentario" required maxlength="100">
             </div>
             <div class="form-group">
-                <textarea name="descripcion" placeholder="Escribe tu comentario aquí..." required></textarea>
+                <textarea name="descripcion" placeholder="Escribe tu comentario aquí..." required maxlength="500"></textarea>
             </div>
             <button type="submit" class="btn-enviar">Enviar Comentario</button>
         </form>

@@ -19,17 +19,17 @@ $resultado = baseDatos($consulta);
 <head>
     <title>Comentarios - Ynventaris</title>
     <meta charset="utf-8">
-    <link rel="stylesheet" type="text/css" href="backend.css">
+    <link rel="stylesheet" type="text/css" href="../backend.css">
 </head>
 <body>
     <header>
         <div class="logo">
-            <a href="backend.php" title="Inicio">
+            <a href="../backend.php" title="Inicio">
                 <img src="../img/fotos_pag/logo.png" class="flogo">
             </a>
         </div>
         <nav>
-            <a href="backend.php">VOLVER</a>
+            <a href="../backend.php">VOLVER</a>
             <?php if(isset($_SESSION['id_usuario'])): ?>
                 <a href="usuarios/logout.php">CERRAR SESIÓN</a>
             <?php endif; ?>

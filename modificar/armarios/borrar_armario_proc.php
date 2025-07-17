@@ -3,7 +3,7 @@
 session_start();
 
 // Incluir funciones sin espacios en blanco antes de <?php
-include("../funciones.php");
+include("funciones.php");
 
 // Verificar sesión y permisos
 if(!isset($_SESSION['id_usuario'])) {
