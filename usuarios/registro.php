@@ -34,11 +34,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['boton'])) {
             // Escapar valores para prevenir SQL injection
             $nombre = mysqli_real_escape_string($conexion, $nombre);
             $mail = mysqli_real_escape_string($conexion, $mail);
-            $contraseña = mysqli_real_escape_string($conexion, $contraseña);
             $cate = mysqli_real_escape_string($conexion, $cate);
             if ($curso) {
                 $curso = mysqli_real_escape_string($conexion, $curso);
             }
+
+            // Generar hash de la contraseña
+            $contraseña_hash = hashPassword($contraseña);
+            $contraseña_hash = mysqli_real_escape_string($conexion, $contraseña_hash);
 
             // Verificar si el mail ya existe
             $consulta_check = "SELECT * FROM login WHERE mail = '$mail'";
@@ -60,11 +63,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['boton'])) {
 
                 // Preparar la consulta de inserción
                 if ($curso_valor) {
-                    $consulta = "INSERT INTO login (nombre, mail, contraseña, cate, verificado, curso) 
-                                 VALUES ('$nombre', '$mail', '$contraseña', '$cate', '$verificado', '$curso_valor')";
+                    $consulta = "INSERT INTO login (nombre, mail, contrasena, cate, verificado, curso) 
+                                 VALUES ('$nombre', '$mail', '$contraseña_hash', '$cate', '$verificado', '$curso_valor')";
                 } else {
-                    $consulta = "INSERT INTO login (nombre, mail, contraseña, cate, verificado, curso) 
-                                 VALUES ('$nombre', '$mail', '$contraseña', '$cate', '$verificado', NULL)";
+                    $consulta = "INSERT INTO login (nombre, mail, contrasena, cate, verificado, curso) 
+                                 VALUES ('$nombre', '$mail', '$contraseña_hash', '$cate', '$verificado', NULL)";
                 }
 
                 // Ejecutar la consulta
@@ -88,6 +91,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['boton'])) {
     }
 }
 ?>
+<!-- El resto del HTML permanece igual -->
 <!DOCTYPE html>
 <html lang="es">
 <head>

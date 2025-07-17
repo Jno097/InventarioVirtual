@@ -16,7 +16,6 @@ if(isset($_POST['boton'])) {
         $conexion = mysqli_connect("localhost", "root", "");
         mysqli_select_db($conexion, "inventario");
         $mail = mysqli_real_escape_string($conexion, $mail);
-        $contraseña = mysqli_real_escape_string($conexion, $contraseña);
 
         // Consultar la base de datos tabla login
         $consulta = "SELECT * FROM login WHERE mail = '$mail' LIMIT 1";
@@ -25,8 +24,8 @@ if(isset($_POST['boton'])) {
         if(mysqli_num_rows($resultado) > 0) {
             $usuario = mysqli_fetch_assoc($resultado);
             
-            // Verificar contraseña
-            if($usuario['contraseña'] === $contraseña) {
+            // Verificar contraseña (ahora con hash)
+            if(verifyPassword($contraseña, $usuario['contrasena'])) {
                 // Login exitoso - asignar datos básicos de sesión
                 $_SESSION['id_usuario'] = $usuario['id'];
                 $_SESSION['nombre'] = $usuario['nombre'];
