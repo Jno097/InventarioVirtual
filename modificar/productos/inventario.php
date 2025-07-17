@@ -347,7 +347,8 @@ if(isset($_GET['editar'])) {
     <h1>Gestión de Inventario</h1>
     <div>
         <a href="../armarios/gestion_armarios.php" class="btn btn-success">Gestionar Armarios</a>
-
+        <a href="../../backend.php" class="btn btn-secondary">Volver al inicio</a>
+        <a href="../../usuarios/admin.php" class="btn btn-secondary">Administrar Usuarios</a>
     </div>
 </div>
 
