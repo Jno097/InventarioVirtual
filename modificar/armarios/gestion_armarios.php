@@ -1,6 +1,6 @@
 <?php
 session_start();
-
+include("funciones.php");
 
 // Verificar sesión y permisos
 if(!isset($_SESSION['id_usuario'])) {
@@ -113,7 +113,9 @@ $error_message = isset($_GET['error']) ? $_GET['error'] : '';
             <h1>Gestión de Armarios</h1>
             <div>
                 <a href="agregar_armario.php" class="btn btn-success">+ Agregar Armario</a>
-
+                <a href="../backend.php" class="btn btn-secundary">Volver al Inicio</a>
+    <a href="../modificar/productos/inventario.php" class="btn btn-primary">Gestionar Inventario</a>
+    <a href="../modificar/armarios/gestion_armarios.php" class="btn btn-primary">Gestionar Armarios</a>
             </div>
         </div>
 
