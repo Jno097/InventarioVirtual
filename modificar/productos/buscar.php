@@ -66,7 +66,7 @@ $resultado = mysqli_query($conexion, $consulta);
 <head>
     <title>Buscar Productos</title>
     <meta charset="utf-8">
-    <link rel="stylesheet" type="text/css" href="backend.css">
+    <link rel="stylesheet" type="text/css" href="../../backend.css">
 </head>
 <body>
     <header>

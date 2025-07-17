@@ -328,9 +328,7 @@ $todos_usuarios = baseDatos($consulta_usuarios);
 <!-- Dentro de la sección de navegación en admin.php -->
 <div class="section">
     <h2>Navegación</h2>
-    <a href="../backend.php" class="btn btn-secundary">Volver al Inicio</a>
-    <a href="../modificar/productos/inventario.php" class="btn btn-primary">Gestionar Inventario</a>
-    <a href="../modificar/armarios/gestion_armarios.php" class="btn btn-primary">Gestionar Armarios</a>
+
 </div>
     </div>
 </body>
