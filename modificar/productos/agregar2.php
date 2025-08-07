@@ -2,13 +2,12 @@
 session_start();
 include("funciones.php");
 
-// Verificar sesión
+// Verificar sesión y permisos
 if(!isset($_SESSION['id_usuario'])) {
     header("Location: ../../usuarios/login.php");
     exit;
 }
 
-// Verificar permisos
 $consulta_admin = "SELECT cate, verificado FROM login WHERE id = " . $_SESSION['id_usuario'];
 $resultado_admin = baseDatos($consulta_admin);
 $row_admin = mysqli_fetch_assoc($resultado_admin);
@@ -21,6 +20,16 @@ if($row_admin['verificado'] == '1' && in_array($row_admin['cate'], ['admin', 'pr
 if(!$acceso_permitido) {
     header("Location: ../../backend.php");
     exit;
+}
+
+// Mostrar mensajes de éxito/error
+if(isset($_SESSION['mensaje'])) {
+    $mensaje = $_SESSION['mensaje'];
+    unset($_SESSION['mensaje']);
+}
+if(isset($_SESSION['error'])) {
+    $error = $_SESSION['error'];
+    unset($_SESSION['error']);
 }
 ?>
 
@@ -173,6 +182,25 @@ if(!$acceso_permitido) {
             background-color: #2980b9;
         }
         
+        .mensaje {
+            padding: 1rem;
+            margin-bottom: 1.5rem;
+            border-radius: 4px;
+            text-align: center;
+        }
+        
+        .mensaje-exito {
+            background-color: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        
+        .mensaje-error {
+            background-color: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        
         footer {
             background-color: #2c3e50;
             color: #fff;
@@ -231,9 +259,17 @@ if(!$acceso_permitido) {
             <h1>Agregar productos</h1>
         </div>
         
+        <?php if(isset($mensaje)): ?>
+            <div class="mensaje mensaje-exito"><?php echo $mensaje; ?></div>
+        <?php endif; ?>
+        
+        <?php if(isset($error)): ?>
+            <div class="mensaje mensaje-error"><?php echo $error; ?></div>
+        <?php endif; ?>
+        
         <div class="form-container">
             <form id="form-producto" action="agregar3.php" method="post" enctype="multipart/form-data">
-                <input type="hidden" name="MAX_FILE_SIZE" value="2097152"> <!-- 2MB -->
+                <input type="hidden" name="MAX_FILE_SIZE" value="5242880"> <!-- 5MB -->
                 
                 <div class="form-group">
                     <label for="nombre">Nombre:</label>
@@ -282,8 +318,8 @@ if(!$acceso_permitido) {
                 </div>
                 
                 <div class="form-group">
-                    <label for="imagen">Imagen (solo JPG, máximo 2MB):</label>
-                    <input type="file" id="imagen" name="imagen" accept="image/jpeg,image/jpg" required>
+                    <label for="imagen">Archivo adjunto (cualquier tipo, máximo 5MB):</label>
+                    <input type="file" id="imagen" name="imagen" required>
                 </div>
                 
                 <div class="form-group">
@@ -302,13 +338,12 @@ if(!$acceso_permitido) {
     </footer>
 
     <script>
-        // Validación del formulario del lado del cliente
         document.getElementById('form-producto').addEventListener('submit', function(e) {
-            const imagen = document.getElementById('imagen').files[0];
-            const maxSize = 2 * 1024 * 1024; // 2MB
+            const archivo = document.getElementById('imagen').files[0];
+            const maxSize = 5 * 1024 * 1024; // 5MB
             
-            if (imagen && imagen.size > maxSize) {
-                alert('La imagen es demasiado grande (máximo 2MB permitido)');
+            if (archivo && archivo.size > maxSize) {
+                alert('El archivo es demasiado grande (máximo 5MB permitido)');
                 e.preventDefault();
                 return false;
             }

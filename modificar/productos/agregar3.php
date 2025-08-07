@@ -2,61 +2,58 @@
 session_start();
 require_once("funciones.php");
 
-// Verificar sesión
+// Verificar sesión y permisos (código existente)
 if(!isset($_SESSION['id_usuario'])) {
+    $_SESSION['error'] = "Debe iniciar sesión primero";
     header("Location: ../../usuarios/login.php");
     exit;
 }
 
-// Verificar permisos
 $consulta_admin = "SELECT cate, verificado FROM login WHERE id = " . $_SESSION['id_usuario'];
 $resultado_admin = baseDatos($consulta_admin);
 $row_admin = mysqli_fetch_assoc($resultado_admin);
 
-$acceso_permitido = false;
-if($row_admin['verificado'] == '1' && in_array($row_admin['cate'], ['admin', 'profe'])) {
-    $acceso_permitido = true;
-}
-
-if(!$acceso_permitido) {
+if(!($row_admin['verificado'] == '1' && in_array($row_admin['cate'], ['admin', 'profe']))) {
+    $_SESSION['error'] = "Acceso no autorizado";
     header("Location: ../../backend.php");
     exit;
 }
 
-// Configuración (debería estar en un archivo de configuración separado)
-define('IMGBB_API_KEY', '8c29637bd984b4d9668e66ef0c98333d'); // Reemplazar con tu API key
-define('MAX_FILE_SIZE', 2097152); // 2MB
+// Configuración de ImgBB (reemplaza con tu API key real)
+define('IMGBB_API_KEY', '8c29637bd984b4d9668e66ef0c98333d');
+define('MAX_FILE_SIZE', 5242880); // 5MB
 
-// Verificar que todos los campos requeridos estén presentes
-$required_fields = ['nombre', 'descrip', 'stock', 'lugar', 'categoria', 'estado', 'boton'];
+// Verificar campos requeridos
+$required_fields = ['nombre', 'descrip', 'stock', 'lugar', 'categoria', 'estado'];
 foreach ($required_fields as $field) {
-    if (!isset($_POST[$field]) {
-        mostrarError("El campo $field es requerido");
+    if (empty($_POST[$field])) {
+        $_SESSION['error'] = "El campo $field es requerido";
+        header("Location: agregar2.php");
+        exit;
     }
 }
 
-// Sanitizar y validar datos
-$nombre = sanitizar($_POST["nombre"]);
-$descrip = sanitizar($_POST["descrip"]);
-$stock = intval($_POST["stock"]);
-$lugar = intval($_POST["lugar"]);
-$categoria = sanitizar($_POST["categoria"]);
-$estado = sanitizar($_POST["estado"]);
+// Sanitizar datos
+$nombre = sanitizar($_POST['nombre']);
+$descrip = sanitizar($_POST['descrip']);
+$stock = intval($_POST['stock']);
+$lugar = intval($_POST['lugar']);
+$categoria = sanitizar($_POST['categoria']);
+$estado = sanitizar($_POST['estado']);
 
-if (empty($nombre) || empty($descrip) || empty($categoria)) {
-    mostrarError("Todos los campos de texto son requeridos");
-}
-
+// Validar stock
 if ($stock <= 0) {
-    mostrarError("El stock debe ser mayor que cero");
+    $_SESSION['error'] = "El stock debe ser mayor que cero";
+    header("Location: agregar2.php");
+    exit;
 }
 
 // Procesar imagen
-if (!isset($_FILES["imagen"]) || $_FILES["imagen"]["error"] != UPLOAD_ERR_OK) {
+if (!isset($_FILES['imagen']) || $_FILES['imagen']['error'] != UPLOAD_ERR_OK) {
     $error_msg = "Error al subir la imagen: ";
-    switch ($_FILES["imagen"]["error"]) {
+    switch ($_FILES['imagen']['error'] ?? UPLOAD_ERR_NO_FILE) {
         case UPLOAD_ERR_INI_SIZE:
-        case UPLOAD_ERR_FORM_SIZE: $error_msg .= "El archivo es demasiado grande (máx. 2MB)"; break;
+        case UPLOAD_ERR_FORM_SIZE: $error_msg .= "El archivo es demasiado grande (máx. 5MB)"; break;
         case UPLOAD_ERR_PARTIAL: $error_msg .= "La subida fue interrumpida"; break;
         case UPLOAD_ERR_NO_FILE: $error_msg .= "No se seleccionó ningún archivo"; break;
         case UPLOAD_ERR_NO_TMP_DIR: $error_msg .= "Falta carpeta temporal"; break;
@@ -64,31 +61,41 @@ if (!isset($_FILES["imagen"]) || $_FILES["imagen"]["error"] != UPLOAD_ERR_OK) {
         case UPLOAD_ERR_EXTENSION: $error_msg .= "Extensión de PHP detuvo la subida"; break;
         default: $error_msg .= "Error desconocido"; break;
     }
-    mostrarError($error_msg);
+    $_SESSION['error'] = $error_msg;
+    header("Location: agregar2.php");
+    exit;
 }
 
-// Validar tipo y tamaño de imagen
-$allowed_types = ['image/jpeg', 'image/jpg'];
-$file_type = mime_content_type($_FILES["imagen"]["tmp_name"]);
+// Validar tamaño de imagen
+if ($_FILES['imagen']['size'] > MAX_FILE_SIZE) {
+    $_SESSION['error'] = "La imagen es demasiado grande (máximo 5MB permitido)";
+    header("Location: agregar2.php");
+    exit;
+}
 
+// Validar tipo de imagen
+$allowed_types = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif'];
+$file_type = mime_content_type($_FILES['imagen']['tmp_name']);
 if (!in_array($file_type, $allowed_types)) {
-    mostrarError("Solo se permiten imágenes JPG/JPEG");
-}
-
-if ($_FILES["imagen"]["size"] > MAX_FILE_SIZE) {
-    mostrarError("La imagen es demasiado grande (máximo 2MB permitido)");
+    $_SESSION['error'] = "Solo se permiten imágenes (JPG, PNG, GIF)";
+    header("Location: agregar2.php");
+    exit;
 }
 
 // Subir imagen a ImgBB
-$imgbb_data = subirImagenImgBB($_FILES["imagen"]["tmp_name"], IMGBB_API_KEY);
+$imgbb_data = subirImagenImgBB($_FILES['imagen']['tmp_name'], IMGBB_API_KEY);
 if ($imgbb_data === false) {
-    mostrarError("Error al subir la imagen al servidor remoto");
+    $_SESSION['error'] = "Error al subir la imagen a ImgBB. Intente nuevamente.";
+    header("Location: agregar2.php");
+    exit;
 }
 
 // Conectar a la base de datos
 $conexion = mysqli_connect("localhost", "root", "");
 if (!$conexion) {
-    mostrarError("Error de conexión a la base de datos");
+    $_SESSION['error'] = "Error de conexión a la base de datos";
+    header("Location: agregar2.php");
+    exit;
 }
 
 mysqli_select_db($conexion, "inventario");
@@ -104,22 +111,13 @@ $imagen_url = mysqli_real_escape_string($conexion, $imgbb_data['url']);
 $consulta = "INSERT INTO inventario (nombre, descrip, stock, id_tabla, categoria, estado, imagen) 
              VALUES ('$nombre', '$descrip', $stock, $lugar, '$categoria', '$estado', '$imagen_url')";
 
-$resultado = mysqli_query($conexion, $consulta);
-
-if ($resultado) {
-    // Éxito - redirigir con mensaje de éxito
-    $_SESSION['mensaje'] = "Producto agregado correctamente";
-    header("Location: agregar2.php");
+if (mysqli_query($conexion, $consulta)) {
+    $_SESSION['mensaje'] = "Producto agregado correctamente. Imagen subida a ImgBB.";
 } else {
-    mostrarError("Error al guardar en la base de datos: " . mysqli_error($conexion));
+    $_SESSION['error'] = "Error al guardar en la base de datos: " . mysqli_error($conexion);
 }
 
 mysqli_close($conexion);
-
-// Función para mostrar errores y redirigir
-function mostrarError($mensaje) {
-    $_SESSION['error'] = $mensaje;
-    header("Location: agregar2.php");
-    exit;
-}
+header("Location: agregar2.php");
+exit;
 ?>
