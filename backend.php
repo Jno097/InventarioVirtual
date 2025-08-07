@@ -112,20 +112,6 @@ if ($armario_id) {
                 // Mostrar lista de armarios
                 $consulta_armarios = "SELECT * FROM armarios ORDER BY nombre";
                 $resultado_armarios = baseDatos($consulta_armarios);
-                
-                if (mysqli_num_rows($resultado_armarios) > 0) {
-                    echo '<div class="armarios-lista">';
-                    echo '<h2>Selecciona un armario para ver sus productos:</h2>';
-                    echo '<ul>';
-                    
-                    while ($armario = mysqli_fetch_assoc($resultado_armarios)) {
-                        echo '<li><a href="backend.php?armario_id=' . $armario['id_tabla'] . '">' . 
-                             htmlspecialchars($armario['nombre']) . ' (' . htmlspecialchars($armario['ubicacion']) . ')</a></li>';
-                    }
-                    
-                    echo '</ul>';
-                    echo '</div>';
-                }
             }
             
             // Mensaje del modo edición

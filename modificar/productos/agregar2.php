@@ -38,17 +38,10 @@ if(isset($_SESSION['error'])) {
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Agregar Producto - Super Wang</title>
+    <title>Agregar Producto</title>
     <link rel="stylesheet" href="../../estilos.css">
     <style>
-        body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            line-height: 1.6;
-            color: #333;
-            background-color: #f7f9fc;
-            margin: 0;
-            padding: 0;
-        }
+        
         
         header {
             background-color: #2c3e50;
@@ -96,13 +89,7 @@ if(isset($_SESSION['error'])) {
         nav a:hover {
             background-color: rgba(255, 255, 255, 0.2);
         }
-        
-        main {
-            padding: 2rem;
-            max-width: 1200px;
-            margin: 0 auto;
-            width: 100%;
-        }
+       
         
         .titulo {
             text-align: center;
@@ -212,47 +199,152 @@ if(isset($_SESSION['error'])) {
             margin-bottom: 1rem;
         }
         
-        @media (max-width: 768px) {
-            header {
-                flex-direction: column;
-                padding: 1rem 0;
-            }
-            
-            .logo {
-                margin-bottom: 1rem;
-            }
-            
-            nav {
-                justify-content: center;
-                margin-top: 1rem;
-            }
-            
-            nav a {
-                margin-bottom: 0.5rem;
-            }
-            
-            .form-container {
-                padding: 1rem;
-            }
+       
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: #f5f5f5;
         }
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            background-color: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+            padding-bottom: 20px;
+            border-bottom: 2px solid #eee;
+        }
+        .btn {
+            padding: 8px 16px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            text-decoration: none;
+            display: inline-block;
+            margin: 2px;
+            font-size: 14px;
+        }
+        .btn-success { background-color: #28a745; color: white; }
+        .btn-danger { background-color: #dc3545; color: white; }
+        .btn-primary { background-color: #007bff; color: white; }
+        .btn-secondary { background-color: #6c757d; color: white; }
+        .btn-warning { background-color: #ffc107; color: #212529; }
+        .btn:hover { opacity: 0.8; }
+        .alert {
+            padding: 15px;
+            margin-bottom: 20px;
+            border-radius: 4px;
+        }
+        .alert-success { background-color: #d4edda; color: #155724; border: 1px solid #c3e6cb; }
+        .alert-danger { background-color: #f8d7da; color: #721c24; border: 1px solid #f5c6cb; }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 20px;
+        }
+        th, td {
+            padding: 12px;
+            text-align: left;
+            border-bottom: 1px solid #ddd;
+        }
+        th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+        .section {
+            margin-bottom: 40px;
+        }
+        .section h2 {
+            color: #333;
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid #ddd;
+        }
+        .form-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+        .form-group {
+            display: flex;
+            flex-direction: column;
+        }
+        .form-group label {
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+        .form-group input, .form-group select, .form-group textarea {
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+        .producto-imagen {
+            max-width: 60px;
+            max-height: 60px;
+            object-fit: cover;
+            border-radius: 4px;
+        }
+        .badge {
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 12px;
+            font-weight: bold;
+        }
+        .badge-success { background-color: #28a745; color: white; }
+        .badge-secondary { background-color: #6c757d; color: white; }
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.5);
+        }
+        .modal-content {
+            background-color: white;
+            margin: 5% auto;
+            padding: 20px;
+            border-radius: 8px;
+            width: 80%;
+            max-width: 600px;
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+        .close {
+            color: #aaa;
+            float: right;
+            font-size: 28px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+        .close:hover { color: black; }
     </style>
 </head>
 <body>
-    <header>
-        <div class="logo">
-            <a href="../../backend.php" title="Volver">
-                <img src="../../img/fotos_pag/logo.png" class="flogo" alt="Logo">
-            </a>
-        </div>
-        <nav>
-            <a href="multi_busc.php" title="Búsqueda">BUSCAR</a>
-            <a href="agregar_pro.php" title="Agregar productos">AGREGAR</a>
-            <a href="borrar_pro.php" title="Borrar productos">ELIMINAR</a>
-            <a href="#" title="Modificar productos">EDITAR</a>
-            <a href="../armarios/borrar_armario.php" title="Borrar armarios">ELIMINAR ARMARIOS</a>
-            <a href="agregar_armario.php" title="Administrar armarios">ARMARIOS</a>
-        </nav>
-    </header>
+<div class="container">
+        <!-- En la sección de header, agregar el enlace -->
+<div class="header">
+    <h1>Gestión de Inventario</h1>
+    
+</div>
+<div>
+        <a href="agregar2.php" class="btn btn-success">Agregar Producto</a>
+    <a href="../../usuarios/admin.php" class="btn btn-primary">Gestionar Usuarios</a>
+    <a href="../armarios/gestion_armarios.php" class="btn btn-primary">Gestionar Armarios</a>
+    <a href="../../comentarios/ver_comentario.php" class="btn btn-primary">Gestionar Comentarios</a>
+        <a href="../../backend.php" class="btn btn-secondary">Volver al inicio</a>
+    </div>
     
     <main>
         <div class="titulo">
@@ -329,13 +421,6 @@ if(isset($_SESSION['error'])) {
         </div>
     </main>
     
-    <footer>
-        <div class="logo-footer">
-            <a href="../../backend.php" title="Volver">
-                <img src="../../img/fotos_pag/logo.png" class="flogo" alt="Logo">
-            </a>
-        </div>
-    </footer>
 
     <script>
         document.getElementById('form-producto').addEventListener('submit', function(e) {
