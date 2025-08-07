@@ -346,9 +346,11 @@ if(isset($_GET['editar'])) {
 <div class="header">
     <h1>Gestión de Inventario</h1>
     <div>
-        <a href="../armarios/gestion_armarios.php" class="btn btn-success">Gestionar Armarios</a>
+        <a href="agregar2.php" class="btn btn-success">Agregar Producto</a>
+    <a href="../../usuarios/admin.php" class="btn btn-primary">Gestionar Usuarios</a>
+    <a href="../armarios/gestion_armarios.php" class="btn btn-primary">Gestionar Armarios</a>
+    <a href="../../comentarios/ver_comentario.php" class="btn btn-primary">Gestionar Comentarios</a>
         <a href="../../backend.php" class="btn btn-secondary">Volver al inicio</a>
-        <a href="../../usuarios/admin.php" class="btn btn-secondary">Administrar Usuarios</a>
     </div>
 </div>
 
@@ -406,7 +408,7 @@ if(isset($_GET['editar'])) {
                                     <?php endif; ?>
                                 </td>
                                 <td>
-                                <a href="productos/editar_producto.php?id=<?php echo $producto['id']; ?>" class="btn btn-warning">Editar</a>
+                                <a href="editar_producto.php?id=<?php echo $producto['id']; ?>" class="btn btn-warning">Editar</a>
                                     <form method="POST" style="display: inline;">
                                         <input type="hidden" name="eliminar_producto" value="<?php echo $producto['id']; ?>">
                                         <button type="submit" class="btn btn-danger" onclick="return confirm('¿Está seguro de eliminar este producto?')">
