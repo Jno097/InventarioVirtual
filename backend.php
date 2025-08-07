@@ -5,6 +5,7 @@ include("funciones.php");
 // Verificar si el usuario ha iniciado sesión
 $usuario_logueado = isset($_SESSION['id_usuario']);
 $es_profesor_verificado = $usuario_logueado && $_SESSION['cate'] == 'profe' && $_SESSION['verificado'] == 2;
+$es_admin = $usuario_logueado && $_SESSION['cate'] == 'admin';
 
 // Control del modo edición
 $modo_edicion = false;
@@ -53,9 +54,6 @@ if ($armario_id) {
         }
     }
     </script>
-    <style>
-    /* Estilos CSS existentes... */
-    </style>
 </head>
 
 <body>
@@ -82,7 +80,18 @@ if ($armario_id) {
                 </div>
             </div>
             <?php if($usuario_logueado): ?>
-                <?php if($_SESSION['cate'] == 'profe' && $_SESSION['verificado'] == 2): ?>
+                <?php if($es_profesor_verificado || $es_admin): ?>
+                    <div class="dropdown">
+                        <button class="dropbtn">ADMINISTRACIÓN &#9662;</button>
+                        <div class="dropdown-content">
+                            <a href="usuarios/admin.php">Gestionar Usuarios</a>
+                            <a href="modificar/armarios/gestion_armarios.php">Gestionar Armarios</a>
+                            <a href="modificar/productos/inventario.php">Gestionar Inventario</a>
+                            <a href="comentarios/ver_comentario.php">Gestionar Comentarios</a>
+                        </div>
+                    </div>
+                <?php endif; ?>
+                <?php if($es_profesor_verificado): ?>
                     <div class="modo-edicion-switch">
                         <span class="edit-label">Modo edición:</span>
                         <label class="switch">

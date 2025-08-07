@@ -62,30 +62,190 @@ if($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['boton'])) {
 <head>
     <title>Super Wang - Agregar Armario</title>
     <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="stylesheet" type="text/css" href="../../estilos.css">
     <style>
-        .formulario {
-            max-width: 600px;
-            margin: 20px auto;
-            padding: 20px;
-            background-color: white;
-            border-radius: 8px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
         }
-        .formulario input[type="text"],
-        .formulario textarea {
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #f5f5f5;
+            min-height: 100vh;
+        }
+        
+        header {
+            background-color: #2c3e50;
+            color: #fff;
+            padding: 1rem 0;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+        
+        .logo {
+            padding: 0 2rem;
+        }
+        
+        .flogo {
+            max-height: 60px;
+            transition: transform 0.3s ease;
+        }
+        
+        .flogo:hover {
+            transform: scale(1.05);
+        }
+        
+        nav {
+            display: flex;
+            flex-wrap: wrap;
+            padding: 0 2rem;
+        }
+        
+        nav a {
+            color: white;
+            text-decoration: none;
+            padding: 0.5rem 1rem;
+            margin: 0 0.2rem;
+            font-weight: 500;
+            border-radius: 4px;
+            transition: all 0.3s ease;
+            text-transform: uppercase;
+            font-size: 0.9rem;
+            letter-spacing: 0.5px;
+        }
+        
+        nav a:hover {
+            background-color: rgba(255, 255, 255, 0.2);
+        }
+        
+        main {
+            padding: 2rem;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        
+        .titulo {
+            text-align: center;
+            margin-bottom: 2rem;
+            position: relative;
+        }
+        
+        .titulo h1 {
+            font-size: 2.2rem;
+            color: #2c3e50;
+            margin-bottom: 0.5rem;
+            padding-bottom: 0.5rem;
+            position: relative;
+        }
+        
+        .titulo h1:after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 80px;
+            height: 3px;
+            background-color: #3498db;
+        }
+        
+        .form-container {
+            max-width: 800px;
+            margin: 0 auto;
+            background-color: white;
+            padding: 2rem;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        }
+        
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+        
+        .form-group label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: 600;
+            color: #2c3e50;
+        }
+        
+        .form-group input,
+        .form-group select,
+        .form-group textarea {
             width: 100%;
-            padding: 8px;
-            margin-bottom: 10px;
+            padding: 0.8rem;
             border: 1px solid #ddd;
             border-radius: 4px;
+            font-size: 1rem;
         }
-        .formulario textarea {
-            height: 100px;
+        
+        .form-group textarea {
+            min-height: 120px;
+            resize: vertical;
         }
-        .formulario button {
-            padding: 8px 16px;
-            margin-right: 10px;
+        
+        .btn {
+            display: inline-block;
+            padding: 0.6rem 1.2rem;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 1rem;
+            font-weight: 600;
+            text-decoration: none;
+            transition: background-color 0.3s;
+            text-align: center;
+        }
+        
+        .btn-success {
+            background-color: #28a745;
+            color: white;
+        }
+        
+        .btn-success:hover {
+            background-color: #218838;
+        }
+        
+        .btn-secondary {
+            background-color: #6c757d;
+            color: white;
+        }
+        
+        .btn-secondary:hover {
+            background-color: #5a6268;
+        }
+        
+        .btn-primary {
+            background-color: #3498db;
+            color: white;
+        }
+        
+        .btn-primary:hover {
+            background-color: #2980b9;
+        }
+        
+        .form-actions {
+            display: flex;
+            gap: 1rem;
+            margin-top: 2rem;
+        }
+        
+        footer {
+            background-color: #2c3e50;
+            color: #fff;
+            padding: 2rem 0;
+            text-align: center;
+            margin-top: 2rem;
+        }
+        
+        .logo-footer {
+            margin-bottom: 1rem;
         }
     </style>
 </head>
@@ -97,9 +257,9 @@ if($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['boton'])) {
             </a>
         </div>
         <nav>
-            <a href="gestion_armarios.php" title="Volver a gestión">VOLVER</a>
-            <a href="../inventario.php" title="Gestionar inventario">INVENTARIO</a>
-            <a href="../../usuarios/admin.php" title="Administración">ADMIN</a>
+            <a href="gestion_armarios.php" class="btn btn-primary">Volver a gestión</a>
+            <a href="../inventario.php" class="btn btn-primary">Gestionar inventario</a>
+            <a href="../../usuarios/admin.php" class="btn btn-primary">Administración</a>
         </nav>
     </header>
     
@@ -108,24 +268,27 @@ if($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['boton'])) {
             <h1>Agregar Armario</h1>
         </div>
         
-        <div class="formulario">
+        <div class="form-container">
             <form method="post">
-                <p>Nombre del Armario:
-                    <input type="text" name="nombre" required autofocus>
-                </p>
+                <div class="form-group">
+                    <label for="nombre">Nombre del Armario:</label>
+                    <input type="text" id="nombre" name="nombre" required autofocus>
+                </div>
                 
-                <p>Ubicación:
-                    <input type="text" name="ubicacion" required>
-                </p>
+                <div class="form-group">
+                    <label for="ubicacion">Ubicación:</label>
+                    <input type="text" id="ubicacion" name="ubicacion" required>
+                </div>
                 
-                <p>Descripción:
-                    <textarea name="descripcion"></textarea>
-                </p>
+                <div class="form-group">
+                    <label for="descripcion">Descripción:</label>
+                    <textarea id="descripcion" name="descripcion"></textarea>
+                </div>
                 
-                <p>
+                <div class="form-actions">
                     <button type="submit" name="boton" class="btn btn-success">Guardar Armario</button>
                     <a href="gestion_armarios.php" class="btn btn-secondary">Cancelar</a>
-                </p>
+                </div>
             </form>
         </div>
     </main>
