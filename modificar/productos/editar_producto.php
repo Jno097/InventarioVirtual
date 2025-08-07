@@ -511,7 +511,7 @@ $armarios = baseDatos($consulta_armarios);
                         💾 Guardar Cambios
                     </button>
                     <a href="../inventario.php" class="btn btn-secondary">
-                        ← Cancelar
+                        ← Volver
                     </a>
                 </div>
             </form>
