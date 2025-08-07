@@ -2,42 +2,36 @@
 session_start();
 include("funciones.php");
 
-// Verificar si hay sesión activa
+// Verificar sesión
 if(!isset($_SESSION['id_usuario'])) {
-    echo "<script>alert('Debe iniciar sesión primero'); window.location='../../usuarios/login.php';</script>";
+    header("Location: ../../usuarios/login.php");
     exit;
 }
 
-// Verificar si el usuario es administrador o profesor verificado
+// Verificar permisos
 $consulta_admin = "SELECT cate, verificado FROM login WHERE id = " . $_SESSION['id_usuario'];
 $resultado_admin = baseDatos($consulta_admin);
 $row_admin = mysqli_fetch_assoc($resultado_admin);
 
-// Verificar permisos: admin, profe (todos deben estar verificados)
 $acceso_permitido = false;
-
-if($row_admin['verificado'] == '1') { // Verificamos como string ya que viene así de la BD
-    if($row_admin['cate'] == 'admin' || $row_admin['cate'] == 'profe') {
-        $acceso_permitido = true;
-    }
+if($row_admin['verificado'] == '1' && in_array($row_admin['cate'], ['admin', 'profe'])) {
+    $acceso_permitido = true;
 }
 
 if(!$acceso_permitido) {
-    echo "<script>alert('Acceso no autorizado. Solo administradores y profesores verificados pueden acceder.'); window.location='../../backend.php';</script>";
+    header("Location: ../../backend.php");
     exit;
 }
-
 ?>
 
 <!DOCTYPE html>
 <html lang="es">
 <head>
-    <title>Super Wang</title>
-    <meta charset="utf-8">
+    <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="stylesheet" type="text/css" href="../../estilos.css">
+    <title>Agregar Producto - Super Wang</title>
+    <link rel="stylesheet" href="../../estilos.css">
     <style>
-        /* Estilos generales */
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             line-height: 1.6;
@@ -46,8 +40,7 @@ if(!$acceso_permitido) {
             margin: 0;
             padding: 0;
         }
-
-        /* Header */
+        
         header {
             background-color: #2c3e50;
             color: #fff;
@@ -58,26 +51,26 @@ if(!$acceso_permitido) {
             align-items: center;
             flex-wrap: wrap;
         }
-
+        
         .logo {
             padding: 0 2rem;
         }
-
+        
         .flogo {
             max-height: 60px;
             transition: transform 0.3s ease;
         }
-
+        
         .flogo:hover {
             transform: scale(1.05);
         }
-
+        
         nav {
             display: flex;
             flex-wrap: wrap;
             padding: 0 2rem;
         }
-
+        
         nav a {
             color: white;
             text-decoration: none;
@@ -90,25 +83,24 @@ if(!$acceso_permitido) {
             font-size: 0.9rem;
             letter-spacing: 0.5px;
         }
-
+        
         nav a:hover {
             background-color: rgba(255, 255, 255, 0.2);
         }
-
-        /* Main content */
+        
         main {
             padding: 2rem;
             max-width: 1200px;
             margin: 0 auto;
             width: 100%;
         }
-
+        
         .titulo {
             text-align: center;
             margin-bottom: 2rem;
             position: relative;
         }
-
+        
         .titulo h1 {
             font-size: 2.2rem;
             color: #2c3e50;
@@ -116,7 +108,7 @@ if(!$acceso_permitido) {
             padding-bottom: 0.5rem;
             position: relative;
         }
-
+        
         .titulo h1:after {
             content: '';
             position: absolute;
@@ -127,8 +119,7 @@ if(!$acceso_permitido) {
             height: 3px;
             background-color: #3498db;
         }
-
-        /* Form styles */
+        
         .form-container {
             background-color: white;
             padding: 2rem;
@@ -139,18 +130,18 @@ if(!$acceso_permitido) {
             margin-left: auto;
             margin-right: auto;
         }
-
+        
         .form-group {
             margin-bottom: 1.5rem;
         }
-
+        
         .form-group label {
             display: block;
             margin-bottom: 0.5rem;
             font-weight: 600;
             color: #2c3e50;
         }
-
+        
         .form-group input,
         .form-group select,
         .form-group textarea {
@@ -160,11 +151,11 @@ if(!$acceso_permitido) {
             border-radius: 4px;
             font-size: 1rem;
         }
-
+        
         .form-group input[type="file"] {
             padding: 0.5rem;
         }
-
+        
         .form-group button {
             background-color: #3498db;
             color: white;
@@ -177,28 +168,22 @@ if(!$acceso_permitido) {
             font-weight: 600;
             width: 100%;
         }
-
+        
         .form-group button:hover {
             background-color: #2980b9;
         }
-
-        /* Footer */
+        
         footer {
             background-color: #2c3e50;
             color: #fff;
             padding: 2rem 0;
             text-align: center;
         }
-
+        
         .logo-footer {
             margin-bottom: 1rem;
         }
-
-        .logo-footer img {
-            max-height: 50px;
-        }
-
-        /* Responsive */
+        
         @media (max-width: 768px) {
             header {
                 flex-direction: column;
@@ -228,15 +213,15 @@ if(!$acceso_permitido) {
     <header>
         <div class="logo">
             <a href="../../backend.php" title="Volver">
-                <img src="../../img/fotos_pag/logo.png" class="flogo">
+                <img src="../../img/fotos_pag/logo.png" class="flogo" alt="Logo">
             </a>
         </div>
         <nav>
-            <a href="multi_busc.php" title="Búsqueda" target="blank">BUSCAR</a>
-            <a href="agregar_pro.php" title="Agregar productos" target="blank">AGREGAR</a>
-            <a href="borrar_pro.php" title="Borrar productos" target="blank">ELIMINAR</a>
-            <a href="#" title="Modificar productos" target="blank">EDITAR</a>
-            <a href="../armarios/borrar_armario.php" title="Borras armarios" target="blank">ELIMINAR ARMARIOS</a>
+            <a href="multi_busc.php" title="Búsqueda">BUSCAR</a>
+            <a href="agregar_pro.php" title="Agregar productos">AGREGAR</a>
+            <a href="borrar_pro.php" title="Borrar productos">ELIMINAR</a>
+            <a href="#" title="Modificar productos">EDITAR</a>
+            <a href="../armarios/borrar_armario.php" title="Borrar armarios">ELIMINAR ARMARIOS</a>
             <a href="agregar_armario.php" title="Administrar armarios">ARMARIOS</a>
         </nav>
     </header>
@@ -247,7 +232,9 @@ if(!$acceso_permitido) {
         </div>
         
         <div class="form-container">
-            <form action="agregar3.php" method="post" enctype="multipart/form-data">
+            <form id="form-producto" action="agregar3.php" method="post" enctype="multipart/form-data">
+                <input type="hidden" name="MAX_FILE_SIZE" value="2097152"> <!-- 2MB -->
+                
                 <div class="form-group">
                     <label for="nombre">Nombre:</label>
                     <input type="text" id="nombre" name="nombre" required autofocus>
@@ -255,7 +242,7 @@ if(!$acceso_permitido) {
                 
                 <div class="form-group">
                     <label for="descrip">Descripción:</label>
-                    <input type="text" id="descrip" name="descrip" required>
+                    <textarea id="descrip" name="descrip" required rows="3"></textarea>
                 </div>
                 
                 <div class="form-group">
@@ -264,34 +251,22 @@ if(!$acceso_permitido) {
                 </div>
                 
                 <div class="form-group">
-    <label for="lugar">Lugar de ubicación:</label>
-    <select id="lugar" name="lugar" required>
-        <?php
-        // Consulta para obtener todos los armarios disponibles
-        $consulta = "SELECT id_tabla, nombre FROM armarios ORDER BY nombre";
-        $resultado = baseDatos($consulta);
-        
-        if ($resultado === false) {
-            // Error en la consulta
-            echo "<option value=''>Error al cargar armarios</option>";
-        } else {
-            $n = mysqli_num_rows($resultado);
-            
-            if ($n >= 1) {
-                // Iterar sobre todos los armarios encontrados
-                while ($fila = mysqli_fetch_assoc($resultado)) {
-                    $id_tabla = $fila["id_tabla"];
-                    $nombre = $fila["nombre"];
-                    echo "<option value='$id_tabla'>$nombre</option>";
-                }
-            } else {
-                // Si no hay armarios
-                echo "<option value=''>No hay armarios disponibles</option>";
-            }
-        }
-        ?>
-    </select>
-</div>
+                    <label for="lugar">Lugar de ubicación:</label>
+                    <select id="lugar" name="lugar" required>
+                        <?php
+                        $consulta = "SELECT id_tabla, nombre FROM armarios ORDER BY nombre";
+                        $resultado = baseDatos($consulta);
+                        
+                        if ($resultado && mysqli_num_rows($resultado) > 0) {
+                            while ($fila = mysqli_fetch_assoc($resultado)) {
+                                echo "<option value='{$fila['id_tabla']}'>{$fila['nombre']}</option>";
+                            }
+                        } else {
+                            echo "<option value=''>No hay armarios disponibles</option>";
+                        }
+                        ?>
+                    </select>
+                </div>
                 
                 <div class="form-group">
                     <label for="categoria">Categoría:</label>
@@ -307,8 +282,8 @@ if(!$acceso_permitido) {
                 </div>
                 
                 <div class="form-group">
-                    <label for="imagen">Imagen (solo JPG):</label>
-                    <input type="file" id="imagen" name="imagen" accept="image/jpg" required>
+                    <label for="imagen">Imagen (solo JPG, máximo 2MB):</label>
+                    <input type="file" id="imagen" name="imagen" accept="image/jpeg,image/jpg" required>
                 </div>
                 
                 <div class="form-group">
@@ -321,9 +296,25 @@ if(!$acceso_permitido) {
     <footer>
         <div class="logo-footer">
             <a href="../../backend.php" title="Volver">
-                <img src="../../img/fotos_pag/logo.png" class="flogo">
+                <img src="../../img/fotos_pag/logo.png" class="flogo" alt="Logo">
             </a>
         </div>
     </footer>
+
+    <script>
+        // Validación del formulario del lado del cliente
+        document.getElementById('form-producto').addEventListener('submit', function(e) {
+            const imagen = document.getElementById('imagen').files[0];
+            const maxSize = 2 * 1024 * 1024; // 2MB
+            
+            if (imagen && imagen.size > maxSize) {
+                alert('La imagen es demasiado grande (máximo 2MB permitido)');
+                e.preventDefault();
+                return false;
+            }
+            
+            return true;
+        });
+    </script>
 </body>
 </html>
