@@ -270,6 +270,54 @@ $todos_usuarios = baseDatos($consulta_usuarios);
                 <?php echo $error_message; ?>
             </div>
         <?php endif; ?>
+
+        <!-- Sección de usuarios pendientes de verificación -->
+        <div class="section">
+            <h2>Profesores Pendientes de Verificación</h2>
+            <?php if(mysqli_num_rows($usuarios_pendientes) > 0): ?>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Nombre</th>
+                            <th>Email</th>
+                            <th>Curso</th>
+                            <th>Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <?php while($usuario = mysqli_fetch_assoc($usuarios_pendientes)): ?>
+                            <tr>
+                                <td><?php echo $usuario['id']; ?></td>
+                                <td><?php echo sanitizar($usuario['nombre']); ?></td>
+                                <td><?php echo sanitizar($usuario['mail']); ?></td>
+                                <td><?php echo sanitizar($usuario['curso']); ?></td>
+                                <td>
+                                    <form method="POST" style="display: inline;">
+                                        <input type="hidden" name="id_usuario" value="<?php echo $usuario['id']; ?>">
+                                        <input type="hidden" name="accion" value="verificar">
+                                        <button type="submit" class="btn btn-success" onclick="return confirm('¿Verificar este profesor?')">
+                                            Verificar
+                                        </button>
+                                    </form>
+                                    <form method="POST" style="display: inline;">
+                                        <input type="hidden" name="id_usuario" value="<?php echo $usuario['id']; ?>">
+                                        <input type="hidden" name="accion" value="rechazar">
+                                        <button type="submit" class="btn btn-danger" onclick="return confirm('¿Rechazar este profesor? Se eliminará de la base de datos.')">
+                                            Rechazar
+                                        </button>
+                                    </form>
+                                </td>
+                            </tr>
+                        <?php endwhile; ?>
+                    </tbody>
+                </table>
+            <?php else: ?>
+                <p>No hay profesores pendientes de verificación.</p>
+            <?php endif; ?>
+        </div>
+
+        
 <!-- Sección de todos los usuarios -->
 <div class="section">
             <h2>Gestión de Usuarios</h2>
@@ -333,51 +381,7 @@ $todos_usuarios = baseDatos($consulta_usuarios);
             <?php endif; ?>
         </div>
 
-        <!-- Sección de usuarios pendientes de verificación -->
-        <div class="section">
-            <h2>Profesores Pendientes de Verificación</h2>
-            <?php if(mysqli_num_rows($usuarios_pendientes) > 0): ?>
-                <table>
-                    <thead>
-                        <tr>
-                            <th>ID</th>
-                            <th>Nombre</th>
-                            <th>Email</th>
-                            <th>Curso</th>
-                            <th>Acciones</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <?php while($usuario = mysqli_fetch_assoc($usuarios_pendientes)): ?>
-                            <tr>
-                                <td><?php echo $usuario['id']; ?></td>
-                                <td><?php echo sanitizar($usuario['nombre']); ?></td>
-                                <td><?php echo sanitizar($usuario['mail']); ?></td>
-                                <td><?php echo sanitizar($usuario['curso']); ?></td>
-                                <td>
-                                    <form method="POST" style="display: inline;">
-                                        <input type="hidden" name="id_usuario" value="<?php echo $usuario['id']; ?>">
-                                        <input type="hidden" name="accion" value="verificar">
-                                        <button type="submit" class="btn btn-success" onclick="return confirm('¿Verificar este profesor?')">
-                                            Verificar
-                                        </button>
-                                    </form>
-                                    <form method="POST" style="display: inline;">
-                                        <input type="hidden" name="id_usuario" value="<?php echo $usuario['id']; ?>">
-                                        <input type="hidden" name="accion" value="rechazar">
-                                        <button type="submit" class="btn btn-danger" onclick="return confirm('¿Rechazar este profesor? Se eliminará de la base de datos.')">
-                                            Rechazar
-                                        </button>
-                                    </form>
-                                </td>
-                            </tr>
-                        <?php endwhile; ?>
-                    </tbody>
-                </table>
-            <?php else: ?>
-                <p>No hay profesores pendientes de verificación.</p>
-            <?php endif; ?>
-        </div>
+        
 
         
         <!-- Enlaces de navegación -->

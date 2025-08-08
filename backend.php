@@ -279,9 +279,7 @@ if ($armario_id) {
                         echo "<div class='mini-item'>";
                         echo "<div class='mini-foto'>$imagen_rel_tag</div>";
                         echo "<div class='mini-info'>";
-                        echo "<h3>$nombre_rel</h3>";
                         echo "<p>$descrip_rel</p>";
-                        echo "<p>Stock: $stock_rel</p>";
                         
                         // Botones de edición para componentes relacionados
                         if($modo_edicion && $es_profesor_verificado) {

@@ -71,7 +71,7 @@ $resultado = mysqli_query($conexion, $consulta);
 <body>
     <header>
         <div class="logo">
-            <a href="backend.php" title="Inicio">
+            <a href="../../backend.php" title="Inicio">
                  <img src="../../img/fotos_pag/logo.png" class="flogo">
             </a>
         </div>
@@ -80,7 +80,7 @@ $resultado = mysqli_query($conexion, $consulta);
             <div class="dropdown">
                 <button class="dropbtn">ARMARIOS</button>
                 <div class="dropdown-content">
-                    <a href="backend.php">Todos los armarios</a>
+                    <a href="../../backend.php">Todos los armarios</a>
                     <?php if($es_profesor_verificado): ?>
                         <a href="../armarios/agregar_armario.php">Agregar armario</a>
                     <?php endif; ?>
@@ -200,7 +200,7 @@ $resultado = mysqli_query($conexion, $consulta);
                             echo "
                             <div class='item'>
                                 <div class='foto'>
-                                    <a href='backend.php?armario_id=" . $fila['id_tabla'] . "' title='Ver en armario'>
+                                    <a href='../../backend.php?armario_id=" . $fila['id_tabla'] . "' title='Ver en armario'>
                                         $imagen_tag
                                     </a>
                                 </div>
@@ -255,7 +255,7 @@ $resultado = mysqli_query($conexion, $consulta);
         // Manejar el interruptor de modo edición
         if (document.getElementById('modoEdicionSwitch')) {
             document.getElementById('modoEdicionSwitch').addEventListener('change', function() {
-                window.location.href = 'backend.php?modo_edicion=' + (this.checked ? '1' : '0');
+                window.location.href = '../../backend.php?modo_edicion=' + (this.checked ? '1' : '0');
             });
         }
 
