@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Servidor: 127.0.0.1
--- Tiempo de generación: 08-08-2025 a las 20:45:13
+-- Tiempo de generación: 08-08-2025 a las 21:04:52
 -- Versión del servidor: 10.4.32-MariaDB
 -- Versión de PHP: 8.2.12
 
@@ -121,7 +121,7 @@ INSERT INTO `inventario` (`nombre`, `descrip`, `stock`, `categoria`, `estado`, `
 ('Caja Reductora', 'ideal para proyectos de robótica con ruedas. Este motor cuenta con un diseño de doble eje que permite la adición de un ENCODER para un control preciso de la velocidad.', 1, 'Arduino', 'on', 'https://i.ibb.co/Zp2t8KRW/ce695490682d.jpg', 51, 2),
 ('Pack de destornilladores', 'SET X6 DE DESTORNILLADORES MANGO DE GOMA ANTI RESBALANTE Y PUNTA IMANTADA', 1, 'Herramientas', 'on', 'https://i.ibb.co/bMnP0jQN/5c58a9e6f521.jpg', 52, 3),
 ('Pack de llaves', 'Este set de tubos de 108 piezas está construido en cromo vanadio, incluyendo las piezas más utilizadas en mecánica. De excelente calidad, viene en un maletín plástico con doble traba para mayor seguridad.', 1, 'Herramientas', 'on', 'https://i.ibb.co/zHsF0wft/243841f4b56b.jpg', 53, 3),
-('pack de pinza', 'es la herramienta ideal para cualquier proyecto de bricolaje. Gracias a su diseño compacto y ergonómico, estas pinzas alicates facilitan la realización de diversas tareas con facilidad y precisión.', 1, 'Herramientas', 'on', 'https://i.ibb.co/NgQc76HQ/0c18b3c2f8e6.jpg', 54, 3);
+('pack de pinza', 'es la herramienta ideal para cualquier proyecto de bricolaje. Gracias a su diseño compacto y ergonómico, estas pinzas alicates facilitan la realización de diversas tareas con facilidad y precisión.', 1, 'Herramientas', 'on', 'https://i.ibb.co/NgQc76HQ/0c18b3c2f8e6.jpg', 54, 3),
 ('Pack de llaves', 'Este set de tubos de 108 piezas está construido en cromo vanadio, incluyendo las piezas más utilizadas en mecánica. De excelente calidad, viene en un maletín plástico con doble traba para mayor seguridad.', 1, 'Herramientas', 'off', 'https://i.ibb.co/zHsF0wft/243841f4b56b.jpg', 55, 3),
 ('pack de pinza', 'es la herramienta ideal para cualquier proyecto de bricolaje. Gracias a su diseño compacto y ergonómico, estas pinzas alicates facilitan la realización de diversas tareas con facilidad y precisión.', 1, 'Herramientas', 'off', 'https://i.ibb.co/NgQc76HQ/0c18b3c2f8e6.jpg', 56, 3);
 
@@ -218,19 +218,19 @@ ALTER TABLE `login`
 -- AUTO_INCREMENT de la tabla `armarios`
 --
 ALTER TABLE `armarios`
-  MODIFY `id_tabla` int(16) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
+  MODIFY `id_tabla` int(16) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=4;
 
 --
 -- AUTO_INCREMENT de la tabla `comentario`
 --
 ALTER TABLE `comentario`
-  MODIFY `id_com` int(5) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=4;
+  MODIFY `id_com` int(5) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=17;
 
 --
 -- AUTO_INCREMENT de la tabla `inventario`
 --
 ALTER TABLE `inventario`
-  MODIFY `id` int(5) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=50;
+  MODIFY `id` int(5) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=57;
 
 --
 -- AUTO_INCREMENT de la tabla `login`
