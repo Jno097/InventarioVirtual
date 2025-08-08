@@ -430,7 +430,7 @@ if(isset($_SESSION['error'])) {
                     <button type="submit" name="boton" class="btn btn-primary">
                         💾 Guardar Producto
                     </button>
-                    <a href="../inventario.php" class="btn btn-secondary">
+                    <a href="inventario.php" class="btn btn-secondary">
                         ← Volver
                     </a>
                 </div>
