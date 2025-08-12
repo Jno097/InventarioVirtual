@@ -34,6 +34,7 @@ if ($armario_id) {
 <head>
     <title>Ynventaris</title>
     <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="stylesheet" type="text/css" href="backend.css">
     <script>
     // Función para mostrar/ocultar detalles del producto
@@ -41,17 +42,31 @@ if ($armario_id) {
         // Ocultar todos los detalles primero
         var detalles = document.getElementsByClassName('detalle-producto');
         for (var i = 0; i < detalles.length; i++) {
-            detalles[i].style.display = 'none';
+            detalles[i].classList.remove('visible');
         }
         
         // Mostrar el detalle del producto seleccionado
         var detalleActual = document.getElementById('detalle-' + id);
         if (detalleActual) {
-            detalleActual.style.display = 'block';
-            
-            // Desplazarse suavemente hasta el detalle
-            detalleActual.scrollIntoView({ behavior: 'smooth' });
+            detalleActual.classList.add('visible');
+            document.body.style.overflow = 'hidden';
         }
+    }
+    
+    function cerrarDetalle() {
+        var detalles = document.getElementsByClassName('detalle-producto');
+        for (var i = 0; i < detalles.length; i++) {
+            detalles[i].classList.remove('visible');
+        }
+        document.body.style.overflow = 'auto';
+    }
+    
+    // Toggle del menú móvil
+    function toggleMenu() {
+        var nav = document.querySelector('nav');
+        var toggle = document.querySelector('.menu-toggle');
+        nav.classList.toggle('active');
+        toggle.classList.toggle('active');
     }
     </script>
 </head>
@@ -62,6 +77,11 @@ if ($armario_id) {
             <a href="backend.php" title="Inicio">
                  <img src="../img/fotos_pag/logo.png" class="flogo">
             </a>
+        </div>
+        <div class="menu-toggle" onclick="toggleMenu()">
+            <span></span>
+            <span></span>
+            <span></span>
         </div>
         <nav>
             <a href="modificar/productos/buscar.php" title="Búsqueda">BUSCAR</a>
@@ -204,7 +224,7 @@ if ($armario_id) {
                 
                 // Creamos un div oculto para el detalle de cada producto
                 echo "<div id='detalle-$id' class='detalle-producto'>";
-                echo "<div class='cerrar-detalle'><button onclick='this.parentNode.parentNode.style.display=\"none\"'>Cerrar</button></div>";
+                echo "<div class='cerrar-detalle'><button onclick='cerrarDetalle()'>Cerrar</button></div>";
                 echo "<div class='producto-principal'>";
                 echo "<div class='imagen-principal'>$imagen_tag</div>";
                 echo "<div class='info-principal'>";
@@ -279,6 +299,7 @@ if ($armario_id) {
                         echo "<div class='mini-item'>";
                         echo "<div class='mini-foto'>$imagen_rel_tag</div>";
                         echo "<div class='mini-info'>";
+                        echo "<h3>$nombre_rel</h3>";
                         echo "<p>$descrip_rel</p>";
                         
                         // Botones de edición para componentes relacionados
@@ -296,8 +317,6 @@ if ($armario_id) {
                     
                     echo "</div>"; // mini-items
                     echo "</div>"; // productos-relacionados
-                } else {
-                    echo "<p>Este producto no tiene componentes relacionados.</p>";
                 }
                 
                 echo "</div>"; // detalle-producto
@@ -339,9 +358,25 @@ if ($armario_id) {
 
     <script>
         // Script para manejar el cambio en el interruptor de modo edición
-        document.getElementById('modoEdicionSwitch').addEventListener('change', function() {
-            // Redireccionar con el nuevo estado del modo edición
-            window.location.href = 'backend.php?modo_edicion=' + (this.checked ? '1' : '0');
+        if(document.getElementById('modoEdicionSwitch')) {
+            document.getElementById('modoEdicionSwitch').addEventListener('change', function() {
+                // Redireccionar con el nuevo estado del modo edición
+                window.location.href = 'backend.php?modo_edicion=' + (this.checked ? '1' : '0') + '<?php echo isset($armario_id) ? "&armario_id=".$armario_id : ""; ?>';
+            });
+        }
+
+        // Cerrar detalles al hacer clic fuera
+        document.addEventListener('click', function(e) {
+            if(e.target.classList.contains('detalle-producto')) {
+                cerrarDetalle();
+            }
+        });
+
+        // Cerrar con tecla ESC
+        document.addEventListener('keydown', function(e) {
+            if(e.key === 'Escape') {
+                cerrarDetalle();
+            }
         });
     </script>
 
