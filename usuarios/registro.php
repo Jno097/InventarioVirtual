@@ -91,17 +91,18 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['boton'])) {
     }
 }
 ?>
-<!-- El resto del HTML permanece igual -->
 <!DOCTYPE html>
 <html lang="es">
 <head>
     <title>Ynventaris - Registro</title>
     <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="stylesheet" type="text/css" href="../estilos.css">
     <style>
         .match-indicator {
             margin-left: 10px;
             font-weight: bold;
+            font-size: 0.9rem;
         }
         .match-success {
             color: green;
@@ -112,33 +113,35 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['boton'])) {
         .error-message {
             color: red;
             display: none;
-            font-size: 0.9em;
+            font-size: 0.8rem;
             margin-top: 5px;
         }
         .success-message {
             background-color: #d4edda;
             color: #155724;
-            padding: 10px;
-            margin-bottom: 20px;
+            padding: 0.8rem;
+            margin-bottom: 1.5rem;
             border: 1px solid #c3e6cb;
             border-radius: 5px;
+            font-size: 0.9rem;
         }
         .server-error-message {
             background-color: #f8d7da;
             color: #721c24;
-            padding: 10px;
-            margin-bottom: 20px;
+            padding: 0.8rem;
+            margin-bottom: 1.5rem;
             border: 1px solid #f5c6cb;
             border-radius: 5px;
+            font-size: 0.9rem;
         }
         .input-error {
-            border: 1px solid red;
+            border: 1px solid red !important;
         }
         .input-success {
-            border: 1px solid green;
+            border: 1px solid green !important;
         }
         .form-group {
-            margin: 10px 0;
+            margin: 1rem 0;
         }
         .hidden {
             display: none;
@@ -147,6 +150,18 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['boton'])) {
             background-color: #cccccc;
             cursor: not-allowed;
             opacity: 0.6;
+        }
+        #submitBtn {
+            width: 100%;
+            max-width: 200px;
+        }
+        @media (max-width: 480px) {
+            .formulario {
+                padding: 1rem;
+            }
+            #submitBtn {
+                max-width: 100%;
+            }
         }
     </style>
 </head>
@@ -157,6 +172,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['boton'])) {
             <a href="../backend.php" title="Volver">
                 <img src="../img/fotos_pag/logo.png" class="flogo">
             </a>
+        </div>
+        <div class="menu-toggle" onclick="toggleMenu()">
+            <span></span>
+            <span></span>
+            <span></span>
         </div>
         <nav>
             <a href="multi_busc.php" title="Búsqueda">BUSCAR</a>
@@ -482,6 +502,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['boton'])) {
                 actualizarEstadoBoton();
             }, 100);
         });
+        
+        // Toggle del menú móvil
+        function toggleMenu() {
+            var nav = document.querySelector('nav');
+            var toggle = document.querySelector('.menu-toggle');
+            nav.classList.toggle('active');
+            toggle.classList.toggle('active');
+        }
     </script>
 </body>
 </html>

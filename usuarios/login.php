@@ -85,18 +85,32 @@ if(isset($_POST['boton'])) {
 <head>
     <title>Ynventaris - Iniciar Sesión</title>
     <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="stylesheet" type="text/css" href="../estilos.css">
     <style>
         .error-message {
             background-color: #f8d7da;
             color: #721c24;
-            padding: 10px;
-            margin-bottom: 20px;
+            padding: 0.8rem;
+            margin-bottom: 1.5rem;
             border: 1px solid #f5c6cb;
             border-radius: 5px;
+            font-size: 0.9rem;
         }
         .form-group {
-            margin: 15px 0;
+            margin: 1rem 0;
+        }
+        .formulario button {
+            width: 100%;
+            max-width: 200px;
+        }
+        @media (max-width: 480px) {
+            .formulario {
+                padding: 1rem;
+            }
+            .formulario button {
+                max-width: 100%;
+            }
         }
     </style>
 </head>
@@ -107,8 +121,13 @@ if(isset($_POST['boton'])) {
                 <img src="../img/fotos_pag/logo.png" class="flogo">
             </a>
         </div>
+        <div class="menu-toggle" onclick="toggleMenu()">
+            <span></span>
+            <span></span>
+            <span></span>
+        </div>
         <nav>
-            <a href="multi_busc.php" title="Búsqueda">BUSCAR</a>
+            <a href="../modificar/productos/buscar.php" title="Búsqueda">BUSCAR</a>
             <a href="registro.php" title="Registrarse">REGISTRARSE</a>
         </nav>
     </header>
@@ -152,5 +171,15 @@ if(isset($_POST['boton'])) {
             </a>
         </div>
     </footer>
+    
+    <script>
+        // Toggle del menú móvil
+        function toggleMenu() {
+            var nav = document.querySelector('nav');
+            var toggle = document.querySelector('.menu-toggle');
+            nav.classList.toggle('active');
+            toggle.classList.toggle('active');
+        }
+    </script>
 </body>
 </html>

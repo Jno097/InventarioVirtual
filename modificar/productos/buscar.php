@@ -66,7 +66,39 @@ $resultado = mysqli_query($conexion, $consulta);
 <head>
     <title>Buscar Productos</title>
     <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="stylesheet" type="text/css" href="../../backend.css">
+    <style>
+        /* Estilos adicionales para la página de búsqueda */
+        .resultados-busqueda {
+            margin-top: 1.5rem;
+        }
+        
+        .sin-resultados {
+            padding: 1.5rem;
+            margin-top: 1rem;
+        }
+        
+        .formulario-busqueda {
+            margin-bottom: 1.5rem;
+        }
+        
+        @media (max-width: 768px) {
+            .grupo-campos {
+                flex-direction: column;
+            }
+            
+            .campo {
+                min-width: 100%;
+            }
+            
+            .formulario-busqueda button {
+                width: 100%;
+                margin-right: 0;
+                margin-bottom: 0.5rem;
+            }
+        }
+    </style>
 </head>
 <body>
     <header>
@@ -75,10 +107,15 @@ $resultado = mysqli_query($conexion, $consulta);
                  <img src="../../img/fotos_pag/logo.png" class="flogo">
             </a>
         </div>
+        <div class="menu-toggle" onclick="toggleMenu()">
+            <span></span>
+            <span></span>
+            <span></span>
+        </div>
         <nav>
             <a href="buscar.php" title="Búsqueda" class="active">BUSCAR</a>
             <div class="dropdown">
-                <button class="dropbtn">ARMARIOS</button>
+                <button class="dropbtn">ARMARIOS &#9662;</button>
                 <div class="dropdown-content">
                     <a href="../../backend.php">Todos los armarios</a>
                     <?php if($es_profesor_verificado): ?>
@@ -274,6 +311,14 @@ $resultado = mysqli_query($conexion, $consulta);
                 document.querySelector('.formulario-busqueda').submit();
             }
         });
+        
+        // Toggle del menú móvil
+        function toggleMenu() {
+            var nav = document.querySelector('nav');
+            var toggle = document.querySelector('.menu-toggle');
+            nav.classList.toggle('active');
+            toggle.classList.toggle('active');
+        }
     </script>
 </body>
 </html>
